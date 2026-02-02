@@ -2,41 +2,44 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using pruebaPagoMp.Models;
+using pruebaPagoMp.Models.Interfaces;
+
 
 namespace pruebaPagoMp.Data;
 
 public partial class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext()
-    {
-    }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
-    {
-    }
+    {}
 
     public virtual DbSet<Carrito> Carritos { get; set; }
-
     public virtual DbSet<CarritoItem> CarritoItems { get; set; }
-
     public virtual DbSet<Pago> Pagos { get; set; }
-
     public virtual DbSet<Pedido> Pedidos { get; set; }
-
     public virtual DbSet<PedidoItem> PedidoItems { get; set; }
-
     public virtual DbSet<Producto> Productos { get; set; }
-
     public virtual DbSet<Usuario> Usuarios { get; set; }
-
     public virtual DbSet<WebhookLog> WebhookLogs { get; set; }
+    public DbSet<Rol> Roles => Set<Rol>();
+    public DbSet<UsuarioRol> UsuarioRoles => Set<UsuarioRol>();
+    public DbSet<Bitacora> Bitacoras => Set<Bitacora>();
+    public DbSet<DigitoVerificador> DigitosVerificadores => Set<DigitoVerificador>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=DefaultConnection");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<DigitoVerificador>(entity =>
+        {
+            entity.HasKey(d => d.Tabla);
+        });
+
         modelBuilder.Entity<Carrito>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Carritos__3214EC072DF4D53C");
@@ -165,6 +168,9 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Usuario>(entity =>
         {
+            entity.HasIndex(u => u.Email)
+                .IsUnique();
+
             entity.HasKey(e => e.Id).HasName("PK__Usuarios__3214EC0717FCF778");
 
             entity.HasIndex(e => e.Email, "UX_Usuarios_Email").IsUnique();
@@ -183,6 +189,11 @@ public partial class ApplicationDbContext : DbContext
                 .IsUnicode(false);
         });
 
+        modelBuilder.Entity<UsuarioRol>(entity =>
+        {
+            entity.HasKey(ur => new { ur.UsuarioId, ur.RolId });
+        });
+
         modelBuilder.Entity<WebhookLog>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__WebhookL__3214EC07425E907C");
@@ -197,8 +208,35 @@ public partial class ApplicationDbContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false);
         });
+    }
 
-        OnModelCreatingPartial(modelBuilder);
+    public override int SaveChanges()
+    {
+        AplicarAuditoria();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        AplicarAuditoria();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void AplicarAuditoria()
+    {
+        var ahora = DateTime.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries<IAuditable>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.FechaCreacion = ahora;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.FechaActualizacion = ahora;
+            }
+        }
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

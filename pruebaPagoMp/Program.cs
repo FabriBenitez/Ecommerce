@@ -1,54 +1,162 @@
 using Microsoft.EntityFrameworkCore;
-using pruebaPagoMp.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using pruebaPagoMp.Data;
+using pruebaPagoMp.Services;
+using pruebaPagoMp.Models;
+using pruebaPagoMp.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. CONFIGURACIÓN DE SERVICIOS (builder.Services) ---
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
-// Agrega esto para que el proyecto reconozca Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// 1️⃣ SERVICES
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+    );
+});
+
+// Services
 builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();
 builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<PasswordHasher>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<SecurityLogger>();
+builder.Services.AddDataProtection();
+builder.Services.AddSingleton<CampoProtegidoService>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowReactApp",
-        policy => policy.WithOrigins("http://localhost:5173") 
-            .AllowAnyMethod()
-            .AllowAnyHeader());
-});
+
+
+// 🔐 AUTH + JWT
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+            )
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// 2️⃣ BUILD
 
 var app = builder.Build();
 
-// --- 2. CONFIGURACIÓN DEL MIDDLEWARE (app.Use...) ---
+// 3️⃣ MIDDLEWARE
 
-// AQUÍ va el bloque de Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(); 
+    app.UseSwaggerUI();
 }
+
+
+var hash = BCrypt.Net.BCrypt.HashPassword("123456");
+Console.WriteLine(hash);
+
+
+
+
+
+
+
+//Codigo Seed de Roles
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    if (!context.Roles.Any())
+    {
+        context.Roles.AddRange(
+            new Rol { Nombre = "Cliente" },
+            new Rol { Nombre = "AdminVentas" },
+            new Rol { Nombre = "AdminCompras" },
+            new Rol { Nombre = "AdminGeneral" }
+        );
+
+        context.SaveChanges();
+    }
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    if (!context.Usuarios.Any(u => u.Email == "admin@admin.com"))
+    {
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+
+        var admin = new Usuario
+        {
+            Email = "admin@admin.com",
+            NombreCompleto = "Administrador General",
+            PasswordHash = passwordHash,
+            Activo = true,
+            FechaCreacion = DateTime.UtcNow,
+            DigitoVerificador = "INIT"
+        };
+
+        context.Usuarios.Add(admin);
+        context.SaveChanges();
+
+        var rolAdmin = context.Roles.First(r => r.Nombre == "AdminGeneral");
+
+        context.UsuarioRoles.Add(new UsuarioRol
+        {
+            UsuarioId = admin.Id,
+            RolId = rolAdmin.Id
+        });
+
+        context.SaveChanges();
+    }
+}
+
+
+
+
+
+
+
 
 app.UseRouting();
 
-// El CORS siempre después de Routing y antes de Authorization
 app.UseCors("AllowReactApp");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
