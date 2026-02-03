@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using pruebaPagoMp.Models;
 using pruebaPagoMp.Models.Interfaces;
-
+using pruebaPagoMp.Data.Configurations;
+using pruebaPagoMp.Models.Ventas;
 
 namespace pruebaPagoMp.Data;
 
@@ -27,6 +28,10 @@ public partial class ApplicationDbContext : DbContext
     public DbSet<Bitacora> Bitacoras => Set<Bitacora>();
     public DbSet<DigitoVerificador> DigitosVerificadores => Set<DigitoVerificador>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    public DbSet<Venta> Ventas { get; set; } = null!;
+    public DbSet<DetalleVenta> DetalleVentas { get; set; } = null!;
+
 
     
 
@@ -168,9 +173,6 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Usuario>(entity =>
         {
-            entity.HasIndex(u => u.Email)
-                .IsUnique();
-
             entity.HasKey(e => e.Id).HasName("PK__Usuarios__3214EC0717FCF778");
 
             entity.HasIndex(e => e.Email, "UX_Usuarios_Email").IsUnique();
@@ -208,7 +210,15 @@ public partial class ApplicationDbContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false);
         });
+
+
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfiguration(new VentaConfiguration());
+        modelBuilder.ApplyConfiguration(new DetalleVentaConfiguration());
     }
+
+
+
 
     public override int SaveChanges()
     {
