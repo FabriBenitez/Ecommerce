@@ -1,10 +1,11 @@
-using pruebaPagoMp.DTOs;
+using pruebaPagoMp.Dtos.Carritos;
 
-namespace pruebaPagoMp.Services
+namespace pruebaPagoMp.Services.Carritos;
+
+public interface ICarritoService
 {
-    public interface ICarritoService
-    {
-        Task<bool> AgregarProductoAsync(AgregarItemDto itemDto);
-        // Más adelante agregaremos: ObtenerCarrito, EliminarItem, etc.
-    }
+    Task<CarritoDto> ObtenerCarritoActualAsync(int usuarioId);
+    Task<CarritoDto> AgregarCarritoItemAsync(int usuarioId, AgregarCarritoItemDto dto);
+    Task<CarritoDto> ActualizarCantidadCarritoItemAsync(int usuarioId, int itemId, int cantidad);
+    Task<CarritoDto> EliminarCarritoItemAsync(int usuarioId, int itemId);
 }

@@ -25,3 +25,4 @@ public class Venta
     // Recomendado para fase 2/3 (no es obligatorio pero ayuda)
     public string? Observaciones { get; set; } // ej: "Venta presencial - efectivo"
 }
+

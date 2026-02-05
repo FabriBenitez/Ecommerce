@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="MercadoPago" Version="1.0.4477.31589" />
+    <PackageReference Include="mercadopago-sdk" Version="2.11.0" />
     <PackageReference Include="MercadoPagoCore" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.17" />

@@ -1,4 +1,4 @@
-import api from './api';
+/*import api from './api';
 
 export const crearPreferenciaPago = async (carrito) => {
   try {
@@ -16,4 +16,4 @@ export const crearPreferenciaPago = async (carrito) => {
     console.error("Error al crear la preferencia de pago:", error);
     throw error;
   }
-};
+};*/

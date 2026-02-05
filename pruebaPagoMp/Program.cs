@@ -6,6 +6,7 @@ using pruebaPagoMp.Data;
 using pruebaPagoMp.Services;
 using pruebaPagoMp.Models;
 using pruebaPagoMp.Security;
+using pruebaPagoMp.Services.Carritos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,10 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SecurityLogger>();
 builder.Services.AddDataProtection();
 builder.Services.AddSingleton<CampoProtegidoService>();
+builder.Services.AddScoped<ICarritoService, CarritoService>();
+builder.Services.AddScoped<pruebaPagoMp.Services.Pagos.IMercadoPagoService, pruebaPagoMp.Services.Pagos.MercadoPagoService>();
+builder.Services.AddScoped<pruebaPagoMp.Services.Ventas.IVentasService, pruebaPagoMp.Services.Ventas.VentasService>();
+
 
 
 
