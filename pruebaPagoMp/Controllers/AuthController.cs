@@ -31,7 +31,6 @@ public class AuthController : ControllerBase
         _jwtService = jwtService;
         _securityLogger = securityLogger;
     }
-    
 
     [HttpPost("register")]
     public IActionResult Register(RegisterDto dto)
@@ -39,71 +38,68 @@ public class AuthController : ControllerBase
         _authService.Register(dto);
         return Ok("Usuario registrado");
     }
-
     
-[HttpPost("login")]
-[AllowAnonymous]
-public async Task<IActionResult> Login([FromBody] LoginDto dto)
-{
-    var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-
-    // 1. Buscar usuario
-    var usuario = _context.Usuarios
-        .FirstOrDefault(u => u.Email == dto.Email && u.Activo);
-
-    if (usuario == null)
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        _securityLogger.LoginFail(dto.Email, ip);
-        return Unauthorized("Credenciales inválidas");
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        // 1. Buscar usuario
+        var usuario = _context.Usuarios
+            .FirstOrDefault(u => u.Email == dto.Email && u.Activo);
+
+        if (usuario == null)
+        {
+            _securityLogger.LoginFail(dto.Email, ip);
+            return Unauthorized("Credenciales inválidas");
+        }
+
+        // 2. Verificar password
+        var passwordOk = BCrypt.Net.BCrypt.Verify(dto.Password, usuario.PasswordHash);
+
+        if (!passwordOk)
+        {
+            _securityLogger.LoginFail(dto.Email, ip);
+            return Unauthorized("Credenciales inválidas");
+        }
+
+        // 3. Obtener roles
+        var roles = _context.UsuarioRoles
+            .Where(ur => ur.UsuarioId == usuario.Id)
+            .Select(ur => ur.Rol.Nombre)
+            .ToList();
+
+        // 4. Generar access token
+        var accessToken = _jwtService.GenerateToken(usuario, roles);
+
+        // 5. Generar refresh token
+        var refreshToken = new RefreshToken
+        {
+            UsuarioId = usuario.Id,
+            Token = _authService.GenerateRefreshToken(),
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsRevoked = false
+        };
+
+        _context.RefreshTokens.Add(refreshToken);
+
+        // 6. Auditoría mínima
+        usuario.UltimoLogin = DateTime.UtcNow;
+
+        _context.SaveChanges();
+
+        // ✅ 7. Log de seguridad (OK)
+        _securityLogger.LoginOk(usuario.Id, ip);
+
+        // 8. Respuesta FINAL
+        return Ok(new
+        {
+            accessToken,
+            refreshToken = refreshToken.Token
+        });
     }
-
-    // 2. Verificar password
-    var passwordOk = BCrypt.Net.BCrypt.Verify(dto.Password, usuario.PasswordHash);
-
-    if (!passwordOk)
-    {
-        _securityLogger.LoginFail(dto.Email, ip);
-        return Unauthorized("Credenciales inválidas");
-    }
-
-    // 3. Obtener roles
-    var roles = _context.UsuarioRoles
-        .Where(ur => ur.UsuarioId == usuario.Id)
-        .Select(ur => ur.Rol.Nombre)
-        .ToList();
-
-    // 4. Generar access token
-    var accessToken = _jwtService.GenerateToken(usuario, roles);
-
-    // 5. Generar refresh token
-    var refreshToken = new RefreshToken
-    {
-        UsuarioId = usuario.Id,
-        Token = _authService.GenerateRefreshToken(),
-        CreatedAt = DateTime.UtcNow,
-        ExpiresAt = DateTime.UtcNow.AddDays(7),
-        IsRevoked = false
-    };
-
-    _context.RefreshTokens.Add(refreshToken);
-
-    // 6. Auditoría mínima
-    usuario.UltimoLogin = DateTime.UtcNow;
-
-    _context.SaveChanges();
-
-    // ✅ 7. Log de seguridad (OK)
-    _securityLogger.LoginOk(usuario.Id, ip);
-
-    // 8. Respuesta FINAL
-    return Ok(new
-    {
-        accessToken,
-        refreshToken = refreshToken.Token
-    });
-}
-
-
 
     [Authorize]
     [HttpGet("perfil")]

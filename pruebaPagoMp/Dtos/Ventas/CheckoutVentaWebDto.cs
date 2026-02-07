@@ -2,6 +2,11 @@ namespace pruebaPagoMp.Dtos.Ventas;
 
 public class CheckoutVentaWebDto
 {
-    // opcional: por si querés enviar nota / dirección / etc más adelante
-    public string? Nota { get; set; }
+    public string NombreEntrega { get; set; } = null!;
+    public string TelefonoEntrega { get; set; } = null!;
+    public string DireccionEntrega { get; set; } = null!;
+    public string Ciudad { get; set; } = null!;
+    public string Provincia { get; set; } = null!;
+    public string CodigoPostal { get; set; } = null!;
+    public string? Observaciones { get; set; }
 }

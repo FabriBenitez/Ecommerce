@@ -11,7 +11,6 @@ public class Venta
     // FK Usuario (quien compra en web / quien registra si presencial, según tu criterio)
     public int UsuarioId { get; set; }
     public Usuario Usuario { get; set; } = null!;
-
     // Total calculado al confirmar (sumatoria de Detalles)
     public decimal Total { get; set; }
 
@@ -24,5 +23,9 @@ public class Venta
 
     // Recomendado para fase 2/3 (no es obligatorio pero ayuda)
     public string? Observaciones { get; set; } // ej: "Venta presencial - efectivo"
+
+    public string? MercadoPagoPreferenceId { get; set; }
+    public string? MercadoPagoUrlPago { get; set; }
+
 }
 

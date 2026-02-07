@@ -51,6 +51,7 @@ builder.Services.AddDataProtection();
 builder.Services.AddSingleton<CampoProtegidoService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();
 builder.Services.AddScoped<pruebaPagoMp.Services.Pagos.IMercadoPagoService, pruebaPagoMp.Services.Pagos.MercadoPagoService>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<pruebaPagoMp.Services.Ventas.IVentasService, pruebaPagoMp.Services.Ventas.VentasService>();
 
 

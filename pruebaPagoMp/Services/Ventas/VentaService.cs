@@ -23,7 +23,7 @@ public class VentasService : IVentasService
     {
         // 1) Carrito activo del usuario (con items)
         var carrito = await _context.Carritos
-            .Include(c => c.CarritoItems)
+            .OrderByDescending(c => c.Id)
             .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
 
         if (carrito == null || carrito.CarritoItems.Count == 0)
@@ -81,6 +81,7 @@ public class VentasService : IVentasService
 
             _context.DetalleVentas.Add(detalle);
         }
+        venta.Observaciones = $"Entrega: {dto.NombreEntrega} - Tel: {dto.TelefonoEntrega} - Dir: {dto.DireccionEntrega}, {dto.Ciudad}, {dto.Provincia} ({dto.CodigoPostal})" + (string.IsNullOrWhiteSpace(dto.Observaciones) ? "" : $" | Obs: {dto.Observaciones}");
 
         venta.Total = total;
         await _context.SaveChangesAsync();
@@ -91,16 +92,6 @@ public class VentasService : IVentasService
 
         // 5) Guardar referencias MP en tu entidad Pago o en Venta (depende tu diseño)
         // ✅ Como tu fase 2 Bloque C pide Venta ↔ Pago, acá creamos un Pago “Pendiente”
-        var pago = new Pago
-        {
-            // Ajustá campos a tu modelo real de Pago:
-            PedidoId = 0, // ⚠️ si Pago está ligado a Pedido hoy, conviene crear PagoVenta separado en Fase 2 Bloque C
-            Estado = "PENDIENTE",
-            MercadoPagoPaymentId = preferenceId, // OJO: esto no es paymentId real, pero guardamos referencia por ahora
-            Monto = total,
-            TipoPago = "MercadoPago",
-            FechaRecepcion = DateTime.UtcNow
-        };
 
         // ⚠️ Si tu tabla Pago exige PedidoId, NO guardes acá.
         // En ese caso: guardá preferenceId en Venta (agregando columna) o creá entidad PagoVenta.
@@ -123,40 +114,38 @@ public class VentasService : IVentasService
 
     public async Task<int> ConfirmarPagoVentaAsync(int ventaId, string? referenciaExternaPago, string? metodoPago, string estadoPago)
     {
-        // 1) Buscar venta + detalles
+        await using var tx = await _context.Database.BeginTransactionAsync();
+
         var venta = await _context.Ventas
-            .Include(v => v.Detalles) // ⚠️ si tu navegación se llama distinto, ajustalo
+            .Include(v => v.Detalles)
             .FirstOrDefaultAsync(v => v.Id == ventaId);
 
-        if (venta == null)
-            throw new InvalidOperationException("Venta inexistente.");
+        if (venta == null) throw new InvalidOperationException("Venta inexistente.");
 
         if (venta.EstadoVenta == EstadoVenta.Pagada)
             return venta.Id; // idempotente
 
         if (!string.Equals(estadoPago, "approved", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Pago no aprobado.");
+            throw new InvalidOperationException($"Pago no aprobado: {estadoPago}");
 
-        // 2) Descontar stock (Bloque D) SIN permitir negativo
         foreach (var det in venta.Detalles)
         {
             var prod = await _context.Productos.FirstAsync(p => p.Id == det.ProductoId);
-
             if (prod.Stock < det.Cantidad)
-                throw new InvalidOperationException($"Stock insuficiente al confirmar venta. Producto: {prod.Nombre}");
+                throw new InvalidOperationException($"Stock insuficiente al confirmar. Producto: {prod.Nombre}");
 
             prod.Stock -= det.Cantidad;
         }
 
-        // 3) Marcar venta pagada (inmutable luego)
         venta.EstadoVenta = EstadoVenta.Pagada;
 
-        // 4) Registrar pago (ideal: entidad PagoVenta, lo hacemos en Bloque C)
-        // Guardar referenciaExternaPago / metodoPago, etc.
-
         await _context.SaveChangesAsync();
+        await tx.CommitAsync();
+
         return venta.Id;
     }
+
+
 
     public async Task<int> CrearVentaPresencialAsync(CrearVentaPresencialDto dto)
     {
@@ -218,12 +207,17 @@ public class VentasService : IVentasService
             prod.Stock -= item.Cantidad;
         }
 
-        venta.Total = total;
+        // 4) Crear preferencia MercadoPago usando external_reference = venta.Id
+        var descripcion = $"Compra Web - Venta #{venta.Id}";
+        (string preferenceId, string urlPago) =
+            await _mercadoPagoService.CrearPreferenciaPagoAsync(venta.Id, total, descripcion);
 
-        // 4) Registrar pago manual (Bloque C formal, después)
-        // dto.MetodoPago
+        // 5) Guardar referencias de MercadoPago en la Venta (NO en Pago viejo)
+        venta.MercadoPagoPreferenceId = preferenceId;
+        venta.MercadoPagoUrlPago = urlPago;
 
         await _context.SaveChangesAsync();
+
         return venta.Id;
     }
 }

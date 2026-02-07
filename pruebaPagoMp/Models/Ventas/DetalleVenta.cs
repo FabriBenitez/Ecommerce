@@ -11,9 +11,7 @@ public class DetalleVenta
     public Producto Producto { get; set; } = null!;
 
     public int Cantidad { get; set; }
-
-    // Snapshot del precio al momento de la venta (clave para inmutabilidad)
     public decimal PrecioUnitario { get; set; }
-
     public decimal Subtotal { get; set; }
 }
+

@@ -2,30 +2,27 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using pruebaPagoMp.Models.Ventas;
 
-namespace pruebaPagoMp.Data.Configurations;
-
-public class DetalleVentaConfiguration : IEntityTypeConfiguration<DetalleVenta>
+namespace pruebaPagoMp.Data.Configurations
 {
-    public void Configure(EntityTypeBuilder<DetalleVenta> builder)
+    public class DetalleVentaConfiguration : IEntityTypeConfiguration<DetalleVenta>
     {
-        builder.ToTable("DetalleVentas");
+        public void Configure(EntityTypeBuilder<DetalleVenta> entity)
+        {
+            entity.HasKey(d => d.Id);
 
-        builder.HasKey(d => d.Id);
+            entity.Property(d => d.PrecioUnitario).HasColumnType("decimal(10, 2)");
+            entity.Property(d => d.Subtotal).HasColumnType("decimal(10, 2)");
 
-        builder.Property(d => d.Cantidad)
-            .IsRequired();
+            /*entity.HasOne(d => d.Venta)
+                .WithMany(v => v.Detalles)
+                .HasForeignKey(d => d.VentaId)
+                .OnDelete(DeleteBehavior.Cascade);*/
 
-        builder.Property(d => d.PrecioUnitario)
-            .HasColumnType("decimal(18,2)")
-            .IsRequired();
-
-        builder.Property(d => d.Subtotal)
-            .HasColumnType("decimal(18,2)")
-            .IsRequired();
-
-        builder.HasOne(d => d.Producto)
-            .WithMany() // opcional: Producto.DetallesVenta
-            .HasForeignKey(d => d.ProductoId)
-            .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(d => d.Producto)
+                .WithMany(p => p.DetallesVenta)
+                .HasForeignKey(d => d.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }
+

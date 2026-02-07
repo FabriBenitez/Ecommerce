@@ -8,7 +8,8 @@ public interface IMercadoPagoService
         int ventaId,
         decimal total,
         string descripcion,
-        string moneda = "ARS");
+        string moneda = "ARS"
+    );
 }
 
 public class MercadoPagoPagoInfo

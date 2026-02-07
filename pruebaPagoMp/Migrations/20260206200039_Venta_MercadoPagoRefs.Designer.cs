@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using pruebaPagoMp.Data;
 
@@ -11,9 +12,11 @@ using pruebaPagoMp.Data;
 namespace pruebaPagoMp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260206200039_Venta_MercadoPagoRefs")]
+    partial class Venta_MercadoPagoRefs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -446,13 +449,16 @@ namespace pruebaPagoMp.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("PrecioUnitario")
-                        .HasColumnType("decimal(10, 2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ProductoId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ProductoId1")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(10, 2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("VentaId")
                         .HasColumnType("int");
@@ -461,9 +467,11 @@ namespace pruebaPagoMp.Migrations
 
                     b.HasIndex("ProductoId");
 
+                    b.HasIndex("ProductoId1");
+
                     b.HasIndex("VentaId");
 
-                    b.ToTable("DetalleVentas");
+                    b.ToTable("DetalleVentas", (string)null);
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.Ventas.Venta", b =>
@@ -646,10 +654,14 @@ namespace pruebaPagoMp.Migrations
             modelBuilder.Entity("pruebaPagoMp.Models.Ventas.DetalleVenta", b =>
                 {
                     b.HasOne("pruebaPagoMp.Models.Producto", "Producto")
-                        .WithMany("DetallesVenta")
+                        .WithMany()
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("pruebaPagoMp.Models.Producto", null)
+                        .WithMany("DetalleVentas")
+                        .HasForeignKey("ProductoId1");
 
                     b.HasOne("pruebaPagoMp.Models.Ventas.Venta", "Venta")
                         .WithMany("Detalles")
@@ -694,7 +706,7 @@ namespace pruebaPagoMp.Migrations
                 {
                     b.Navigation("CarritoItems");
 
-                    b.Navigation("DetallesVenta");
+                    b.Navigation("DetalleVentas");
 
                     b.Navigation("PedidoItems");
                 });
