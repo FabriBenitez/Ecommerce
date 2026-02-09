@@ -18,6 +18,7 @@ public class VentasController : ControllerBase
     }
 
     [HttpPost("web/checkout")]
+    [Authorize]
     public async Task<ActionResult<CheckoutVentaWebRespuestaDto>> CheckoutWeb([FromBody] CheckoutVentaWebDto dto)
     {
         var usuarioIdStr =
@@ -34,14 +35,39 @@ public class VentasController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<IActionResult> ObtenerVenta(int id)
     {
-        // lo implementamos en service: ObtenerVentaPorIdAsync(id, usuarioId, esAdmin)
-        return Ok(new {id}); // lo completamos después de crear el método
+        var usuarioIdStr =
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            User.FindFirstValue("sub");
+
+        if (!int.TryParse(usuarioIdStr, out var usuarioId))
+            return Unauthorized("Token inválido (sin usuarioId).");
+
+        var esAdminVentas = User.IsInRole("AdminVentas");
+
+        try
+        {
+            var venta = await _ventasService.ObtenerVentaPorIdAsync(id, usuarioId, esAdminVentas);
+            if (venta == null) return NotFound();
+            return Ok(venta);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 
     [HttpGet("mis-ventas")]
-    public IActionResult MisVentas()
+    public async Task<IActionResult> MisVentas()
     {
-        return StatusCode(501, "Pendiente de implementación: MisVentas()");
+        var usuarioIdStr =
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            User.FindFirstValue("sub");
+
+        if (!int.TryParse(usuarioIdStr, out var usuarioId))
+            return Unauthorized("Token inválido (sin usuarioId).");
+
+        var ventas = await _ventasService.ObtenerMisVentasAsync(usuarioId);
+        return Ok(ventas);
     }
 
 }

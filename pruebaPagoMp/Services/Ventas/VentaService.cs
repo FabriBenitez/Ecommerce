@@ -23,11 +23,13 @@ public class VentasService : IVentasService
     {
         // 1) Carrito activo del usuario (con items)
         var carrito = await _context.Carritos
+            .Include(c => c.CarritoItems)
             .OrderByDescending(c => c.Id)
             .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
 
         if (carrito == null || carrito.CarritoItems.Count == 0)
             throw new InvalidOperationException("No hay carrito activo o está vacío.");
+
 
         // 2) Validar stock y “congelar” precios leyendo Producto actual
         var productoIds = carrito.CarritoItems.Select(i => i.ProductoId).Distinct().ToList();
@@ -208,16 +210,59 @@ public class VentasService : IVentasService
         }
 
         // 4) Crear preferencia MercadoPago usando external_reference = venta.Id
-        var descripcion = $"Compra Web - Venta #{venta.Id}";
-        (string preferenceId, string urlPago) =
-            await _mercadoPagoService.CrearPreferenciaPagoAsync(venta.Id, total, descripcion);
-
-        // 5) Guardar referencias de MercadoPago en la Venta (NO en Pago viejo)
-        venta.MercadoPagoPreferenceId = preferenceId;
-        venta.MercadoPagoUrlPago = urlPago;
 
         await _context.SaveChangesAsync();
 
         return venta.Id;
     }
+    public async Task<VentaDto?> ObtenerVentaPorIdAsync(int ventaId, int usuarioId, bool esAdminVentas)
+    {
+        var venta = await _context.Ventas
+            .AsNoTracking()
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.Producto)
+            .FirstOrDefaultAsync(v => v.Id == ventaId);
+
+        if (venta == null) return null;
+
+        if (!esAdminVentas && venta.UsuarioId != usuarioId)
+            throw new UnauthorizedAccessException("No tenés permisos para ver esta venta.");
+
+        return new VentaDto
+        {
+            Id = venta.Id,
+            Fecha = venta.Fecha,
+            Total = venta.Total,
+            EstadoVenta = venta.EstadoVenta,
+            Canal = venta.Canal,
+            Observaciones = venta.Observaciones,
+
+            Detalles = venta.Detalles.Select(d => new VentaDetalleDto
+            {
+                ProductoId = d.ProductoId,
+                NombreProducto = d.Producto?.Nombre ?? "(sin nombre)",
+                Cantidad = d.Cantidad,
+                PrecioUnitario = d.PrecioUnitario,
+                Subtotal = d.Subtotal
+            }).ToList()
+        };
+    }
+
+    public async Task<List<MisVentasItemDto>> ObtenerMisVentasAsync(int usuarioId)
+    {
+        return await _context.Ventas
+            .AsNoTracking()
+            .Where(v => v.UsuarioId == usuarioId)
+            .OrderByDescending(v => v.Fecha)
+            .Select(v => new MisVentasItemDto
+            {
+                Id = v.Id,
+                Fecha = v.Fecha,
+                Total = v.Total,
+                EstadoVenta = v.EstadoVenta,
+                Canal = v.Canal
+            })
+            .ToListAsync();
+    }
+
 }

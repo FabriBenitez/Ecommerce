@@ -18,18 +18,21 @@ public class AuthController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IJwtService _jwtService;
     private readonly SecurityLogger _securityLogger;
+    private readonly PasswordHasher _passwordHasher;
 
     public AuthController(
         AuthService authService,
         ApplicationDbContext context,
         IJwtService jwtService, 
-        SecurityLogger securityLogger
+        SecurityLogger securityLogger,
+        PasswordHasher passwordHasher
     )
     {
         _authService = authService;
         _context = context;
         _jwtService = jwtService;
         _securityLogger = securityLogger;
+        _passwordHasher = passwordHasher;
     }
 
     [HttpPost("register")]
@@ -55,8 +58,8 @@ public class AuthController : ControllerBase
             return Unauthorized("Credenciales inválidas");
         }
 
-        // 2. Verificar password
-        var passwordOk = BCrypt.Net.BCrypt.Verify(dto.Password, usuario.PasswordHash);
+        // 2. Verificar password (compatibilidad: BCrypt y PBKDF2 legacy)
+        var passwordOk = VerifyPassword(dto.Password, usuario.PasswordHash);
 
         if (!passwordOk)
         {
@@ -162,4 +165,27 @@ public class AuthController : ControllerBase
         });
     }
 
+    private bool VerifyPassword(string password, string storedHash)
+    {
+        if (string.IsNullOrWhiteSpace(storedHash))
+            return false;
+
+        try
+        {
+            if (storedHash.StartsWith("$2"))
+            {
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+
+            return _passwordHasher.Verify(password, storedHash);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+        catch (SaltParseException)
+        {
+            return false;
+        }
+    }
 }

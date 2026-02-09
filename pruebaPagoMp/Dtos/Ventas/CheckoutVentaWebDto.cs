@@ -8,5 +8,5 @@ public class CheckoutVentaWebDto
     public string Ciudad { get; set; } = null!;
     public string Provincia { get; set; } = null!;
     public string CodigoPostal { get; set; } = null!;
-    public string? Observaciones { get; set; }
+    public string? Observaciones { get; set; } = null;
 }
