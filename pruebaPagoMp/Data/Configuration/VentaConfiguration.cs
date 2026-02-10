@@ -34,5 +34,18 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
             .WithOne(d => d.Venta)
             .HasForeignKey(d => d.VentaId)
             .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Property(v => v.MercadoPagoPreferenceId)
+            .HasMaxLength(200);
+
+        builder.Property(v => v.MercadoPagoUrlPago)
+            .HasMaxLength(500);
+
+        builder.Property(v => v.MercadoPagoPaymentId)
+            .HasMaxLength(200);
+
+        builder.Property(v => v.MercadoPagoEstado)
+            .HasMaxLength(50);
+
     }
 }

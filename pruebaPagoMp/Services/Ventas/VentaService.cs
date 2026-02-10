@@ -30,7 +30,6 @@ public class VentasService : IVentasService
         if (carrito == null || carrito.CarritoItems.Count == 0)
             throw new InvalidOperationException("No hay carrito activo o está vacío.");
 
-
         // 2) Validar stock y “congelar” precios leyendo Producto actual
         var productoIds = carrito.CarritoItems.Select(i => i.ProductoId).Distinct().ToList();
 

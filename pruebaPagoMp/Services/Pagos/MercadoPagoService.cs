@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 
@@ -45,47 +46,63 @@ public class MercadoPagoService : IMercadoPagoService
         int ventaId, decimal total, string descripcion, string moneda = "ARS"
     )
     {
-        var publicBaseUrl = _config["PublicBaseUrl"];
+        var token = _config["MercadoPago:AccessToken"];
+        if (string.IsNullOrWhiteSpace(token))
+            throw new InvalidOperationException("Falta MercadoPago:AccessToken en appsettings.json");
+
+        var publicBaseUrl = _config["MercadoPago:PublicBaseUrl"] ?? _config["PublicBaseUrl"];
         if (string.IsNullOrWhiteSpace(publicBaseUrl))
-            throw new InvalidOperationException("Falta PublicBaseUrl en appsettings.Development.json");
+            throw new InvalidOperationException("Falta PublicBaseUrl o MercadoPago:PublicBaseUrl en appsettings.json");
 
-        var notificationUrl = $"{publicBaseUrl}/api/webhooks/mercadopago";
-        Console.WriteLine($"NotificationUrl = {notificationUrl}");
+        publicBaseUrl = publicBaseUrl.TrimEnd('/');
 
-        // Mock por ahora
-        await Task.CompletedTask;
+        var requestBody = new
+        {
+            items = new[]
+            {
+                new
+                {
+                    title = descripcion,
+                    quantity = 1,
+                    unit_price = decimal.Round(total, 2),
+                    currency_id = moneda
+                }
+            },
+            external_reference = ventaId.ToString(),
+            notification_url = $"{publicBaseUrl}/api/webhooks/mercadopago",
+            back_urls = new
+            {
+                success = publicBaseUrl,
+                failure = publicBaseUrl,
+                pending = publicBaseUrl
+            },
+            auto_return = "approved"
+        };
 
-        var preferenceId = $"pref_{ventaId}_{Guid.NewGuid():N}";
+        var req = new HttpRequestMessage(HttpMethod.Post, "https://api.mercadopago.com/checkout/preferences")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+        };
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var urlPago = $"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id={preferenceId}";
+        var resp = await _http.SendAsync(req);
+        var responseJson = await resp.Content.ReadAsStringAsync();
 
-        return (preferenceId, urlPago);
+        if (!resp.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"Mercado Pago devolvio error al crear preferencia. Status={(int)resp.StatusCode} Body={responseJson}");
+        }
+
+        using var doc = JsonDocument.Parse(responseJson);
+        var root = doc.RootElement;
+
+        var preferenceId = root.TryGetProperty("id", out var idProp) ? idProp.GetString() : null;
+        var initPoint = root.TryGetProperty("init_point", out var initProp) ? initProp.GetString() : null;
+
+        if (string.IsNullOrWhiteSpace(preferenceId) || string.IsNullOrWhiteSpace(initPoint))
+            throw new InvalidOperationException("Respuesta de Mercado Pago invalida: no contiene id/init_point.");
+
+        return (preferenceId, initPoint);
     }
-
-
-    /*public async Task<(string preferenceId, string urlPago)> CrearPreferenciaPagoAsync(
-        int ventaId,
-        decimal total,
-        string descripcion,
-        string moneda = "ARS"
-    )
-    {
-        // ⚠️ por ahora lo dejamos como mock si no querés integrar preferencia todavía
-        await Task.CompletedTask;
-
-        var preferenceId = $"pref_{ventaId}_{Guid.NewGuid():N}";
-
-        var urlPago = $"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id={preferenceId}";
-
-        var publicBaseUrl = _config["PublicBaseUrl"];
-        if (string.IsNullOrWhiteSpace(publicBaseUrl))
-            throw new InvalidOperationException("Falta PublicBaseUrl en appsettings.Development.json");
-
-        Console.WriteLine($"PublicBaseUrl = {publicBaseUrl}");
-
-        var notificationUrl = $"{publicBaseUrl}/api/webhooks/mercadopago";
-
-
-        return (preferenceId, urlPago);
-    }*/
 }

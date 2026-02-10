@@ -26,6 +26,7 @@ public class Venta
 
     public string? MercadoPagoPreferenceId { get; set; }
     public string? MercadoPagoUrlPago { get; set; }
-
+    public string? MercadoPagoPaymentId { get; set; }
+    public string? MercadoPagoEstado { get; set; }
 }
 
