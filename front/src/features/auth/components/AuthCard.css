@@ -1,0 +1,42 @@
+.authCard {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border: 1px solid #e9e9e9;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+}
+
+.authCard__header {
+  margin-bottom: 14px;
+}
+
+.authCard__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.authCard__subtitle {
+  margin: 6px 0 0;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.authCard__content {
+  margin-top: 10px;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+  .authCard {
+    padding: 24px;
+  }
+
+  .authCard__title {
+    font-size: 24px;
+  }
+}

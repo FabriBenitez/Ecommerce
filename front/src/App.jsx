@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from './api/api';
+import http from '@/shared/api/http';
 import ProductoCard from './components/ProductCard/ProductCard';
 import Carrito from './components/Carrito/Carrito';
 import { crearPreferenciaPago } from './api/pagoService';
@@ -10,7 +10,7 @@ function App() {
   const [carrito, setCarrito] = useState([]);
 
   useEffect(() => {
-    api.get('/productos')
+    http.get('/api/productos')
       .then(res => setLibros(res.data))
       .catch(err => console.error("Error cargando productos", err));
   }, []);

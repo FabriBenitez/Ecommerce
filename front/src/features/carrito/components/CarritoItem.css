@@ -1,0 +1,137 @@
+.cartItem {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+}
+
+.cartItem__imgWrap {
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f6f7f8;
+  border: 1px solid #efefef;
+}
+
+.cartItem__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cartItem__imgFallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #777;
+  font-size: 12px;
+}
+
+.cartItem__info {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.cartItem__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  color: #111;
+}
+
+.cartItem__meta {
+  margin: 0;
+  font-size: 13px;
+  color: #444;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.cartItem__price {
+  font-weight: 900;
+  color: #0b6;
+}
+
+.cartItem__dot {
+  opacity: 0.6;
+}
+
+.cartItem__subtotal {
+  font-weight: 800;
+}
+
+.cartItem__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.cartItem__qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  padding: 6px 8px;
+}
+
+.cartItem__qtyBtn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 10px;
+  background: #111;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.cartItem__qtyBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cartItem__qtyValue {
+  min-width: 22px;
+  text-align: center;
+  font-weight: 900;
+  color: #111;
+}
+
+.cartItem__remove {
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  color: #111;
+  font-weight: 900;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.cartItem__remove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 420px) {
+  .cartItem {
+    grid-template-columns: 72px 1fr;
+  }
+  .cartItem__imgWrap {
+    width: 72px;
+    height: 72px;
+  }
+}
+

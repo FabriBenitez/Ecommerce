@@ -8,6 +8,7 @@ namespace pruebaPagoMp.Controllers;
 
 [ApiController]
 [Route("api/ventas")]
+[Authorize]
 public class VentasController : ControllerBase
 {
     private readonly IVentasService _ventasService;
@@ -52,7 +53,7 @@ public class VentasController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return Forbid(ex.Message);
+            return StatusCode(403, ex.Message);
         }
     }
 

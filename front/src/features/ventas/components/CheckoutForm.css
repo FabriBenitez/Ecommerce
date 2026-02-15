@@ -1,0 +1,97 @@
+.checkoutForm {
+  width: 100%;
+  max-width: 860px;
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+}
+
+.checkoutForm__header {
+  margin-bottom: 14px;
+}
+
+.checkoutForm__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 950;
+  color: #111;
+}
+
+.checkoutForm__subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.checkoutForm__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.checkoutForm__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkoutForm__field--full {
+  grid-column: 1 / -1;
+}
+
+.checkoutForm__label {
+  font-size: 13px;
+  color: #444;
+  font-weight: 700;
+}
+
+.checkoutForm__input,
+.checkoutForm__textarea {
+  border: 1px solid #dcdcdc;
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 14px;
+}
+
+.checkoutForm__input:focus,
+.checkoutForm__textarea:focus {
+  border-color: #111;
+}
+
+.checkoutForm__error {
+  margin: 10px 0 0;
+  color: #b00020;
+  font-size: 13px;
+}
+
+.checkoutForm__button {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #111;
+  color: #fff;
+  font-weight: 950;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+.checkoutForm__button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .checkoutForm {
+    max-width: 720px;
+  }
+}
+
+@media (max-width: 640px) {
+  .checkoutForm__grid {
+    grid-template-columns: 1fr;
+  }
+}
