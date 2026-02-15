@@ -1,29 +1,80 @@
-import { Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/shared/auth/useAuth";
 import "./Navbar.css";
 
+function cx(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
 export default function Navbar() {
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <header className="nav">
       <div className="nav__inner">
-        <Link className="nav__brand" to="/catalogo">Librería</Link>
+        <Link className="nav__brand" to="/catalogo">
+          Librería
+        </Link>
 
-        <nav className="nav__links">
-          <Link className="nav__link" to="/catalogo">Catálogo</Link>
-          <Link className="nav__link" to="/carrito">Carrito</Link>
+        <nav className="nav__links" aria-label="Principal">
+          <NavLink
+            to="/catalogo"
+            className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
+          >
+            Catálogo
+          </NavLink>
 
-          {usuario ? (
+          {isAuthenticated ? (
             <>
-              <Link className="nav__link" to="/ventas/mis-ventas">Mis compras</Link>
-              <button className="nav__btn" onClick={logout}>Salir</button>
+              <NavLink
+                to="/carrito"
+                className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
+              >
+                Carrito
+              </NavLink>
+
+              <NavLink
+                to="/mis-ventas"
+                className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
+              >
+                Mis compras
+              </NavLink>
+            </>
+          ) : null}
+        </nav>
+
+        <div className="nav__right">
+          {isAuthenticated ? (
+            <>
+              <span className="nav__user" title={usuario?.email ?? ""}>
+                {usuario?.email ?? "Usuario"}
+              </span>
+              <button className="nav__btn" onClick={handleLogout}>
+                Salir
+              </button>
             </>
           ) : (
-            <Link className="nav__btn nav__btn--link" to="/login">Ingresar</Link>
+            <div className="nav__auth">
+              <NavLink
+                to="/login"
+                className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
+              >
+                Login
+              </NavLink>
+              <NavLink to="/registro" className="nav__btn nav__btn--ghost">
+                Registro
+              </NavLink>
+            </div>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
 }
+

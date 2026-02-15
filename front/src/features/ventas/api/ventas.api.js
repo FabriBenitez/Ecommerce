@@ -1,8 +1,19 @@
-import api from "@/shared/api/http";
+import http from "@/shared/api/http";
 
 export const ventasApi = {
-  checkoutWeb: (payload) => api.post("/api/ventas/checkout-web", payload),
-  obtenerVenta: (id) => api.get(`/api/ventas/${id}`),
-  misVentas: () => api.get(`/api/ventas/mis-ventas`),
+  checkoutWeb: (payload) => http.post("/api/ventas/web/checkout", payload),
+  obtenerVenta: (id) => http.get(`/api/ventas/${id}`),
+  obtenerMisVentas: () => http.get("/api/ventas/mis-ventas"),
 };
 
+export async function misVentas() {
+  const { data } = await ventasApi.obtenerMisVentas();
+  return data; // MisVentasItemDto[]
+}
+
+export async function ventaPorId(id) {
+  const { data } = await ventasApi.obtenerVenta(id);
+  return data; // VentaDto
+}
+
+export default ventasApi;

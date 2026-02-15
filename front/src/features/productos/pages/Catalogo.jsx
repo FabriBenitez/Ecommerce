@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import productosApi from "../api/productos.api";
 import ProductCard from "../components/ProductCard";
 import "./Catalogo.css";
@@ -68,10 +69,13 @@ export default function Catalogo() {
           </p>
 
           <div className="catalogHero__actions">
-            <a className="catalogHero__btn" href="/carrito">Ir al carrito</a>
-            <a className="catalogHero__btn catalogHero__btn--ghost" href="/mis-ventas">
+            <Link className="catalogHero__btn" to="/carrito">
+              Ir al carrito
+            </Link>
+
+            <Link className="catalogHero__btn catalogHero__btn--ghost" to="/mis-ventas">
               Mis compras
-            </a>
+            </Link>
           </div>
         </div>
 

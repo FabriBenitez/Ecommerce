@@ -1,110 +1,150 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ventasApi } from "@/features/ventas/api/ventas.api.js";
-import "./Ventas.css";
+import { ventaPorId } from "../api/ventas.api";
+import "./VentaDetalle.css";
+
+const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
+
+function estadoLabel(e) {
+  return typeof e === "string" ? e : `Estado ${e}`;
+}
+function canalLabel(c) {
+  return typeof c === "string" ? c : `Canal ${c}`;
+}
 
 export default function VentaDetalle() {
   const { id } = useParams();
-
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const run = async () => {
+    let alive = true;
+
+    (async () => {
       try {
         setError("");
         setLoading(true);
-        const { data } = await ventasApi.obtenerVenta(id);
+        const data = await ventaPorId(id);
+        if (!alive) return;
         setVenta(data);
       } catch (e) {
-        setError(e?.response?.data ?? "No se pudo cargar la venta.");
+        if (!alive) return;
+        setError(e?.message ?? "No se pudo cargar el detalle de la venta.");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
-    };
-    run();
+    })();
+
+    return () => { alive = false; };
   }, [id]);
 
   return (
-    <main className="ventasPage">
-      <header className="ventasHeader">
-        <h1 className="ventasHeader__title">Detalle de venta</h1>
-        <p className="ventasHeader__subtitle">Información de la compra y sus items.</p>
+    <main className="ventaDetallePage">
+      <header className="ventaDetalleTop">
+        <Link className="backLink" to="/mis-ventas">← Volver</Link>
+        <div className="ventaDetalleTitle">
+          <h1>Venta #{id}</h1>
+          <p>Detalle de compra</p>
+        </div>
       </header>
 
-      {loading ? <p className="ventasInfo">Cargando...</p> : null}
-      {error ? <p className="ventasError">{error}</p> : null}
+      {loading ? <p className="state">Cargando…</p> : null}
+      {error ? <p className="state state--error">{error}</p> : null}
 
-      {venta ? (
-        <section className="ventaDetalle">
-          <div className="ventaDetalle__grid">
-            <div className="ventaBox">
-              <p className="ventaBox__title">Resumen</p>
-              <div className="ventaBox__row"><span>Venta</span><b>#{venta.id}</b></div>
-              <div className="ventaBox__row"><span>Fecha</span><b>{new Date(venta.fecha).toLocaleString()}</b></div>
-              <div className="ventaBox__row"><span>Estado</span><b>{venta.estadoVenta}</b></div>
-              <div className="ventaBox__row"><span>Canal</span><b>{venta.canal}</b></div>
-              <div className="ventaBox__row"><span>Total</span><b>${venta.total}</b></div>
-            </div>
-
-            <div className="ventaBox">
-              <p className="ventaBox__title">Entrega</p>
-              <div className="ventaBox__row"><span>Nombre</span><b>{venta.nombreEntrega ?? "-"}</b></div>
-              <div className="ventaBox__row"><span>Teléfono</span><b>{venta.telefonoEntrega ?? "-"}</b></div>
-              <div className="ventaBox__row"><span>Dirección</span><b>{venta.direccionEntrega ?? "-"}</b></div>
-              <div className="ventaBox__row"><span>Ciudad</span><b>{venta.ciudad ?? "-"}</b></div>
-              <div className="ventaBox__row"><span>Provincia</span><b>{venta.provincia ?? "-"}</b></div>
-              <div className="ventaBox__row"><span>CP</span><b>{venta.codigoPostal ?? "-"}</b></div>
-            </div>
-          </div>
-
-          {venta.observaciones ? (
-            <div className="ventaObs">
-              <b>Observaciones:</b> {venta.observaciones}
-            </div>
-          ) : null}
-
-          <div className="ventaItems">
-            <h2 className="ventaItems__title">Items</h2>
-
-            {venta.detalles?.length ? (
-              <div className="ventaTableWrap">
-                <table className="ventaTable">
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th>Cant.</th>
-                      <th>Precio</th>
-                      <th>Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {venta.detalles.map((d, idx) => (
-                      <tr key={idx}>
-                        <td>{d.nombreProducto}</td>
-                        <td>{d.cantidad}</td>
-                        <td>${d.precioUnitario}</td>
-                        <td>${d.subtotal}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      {!loading && !error && venta ? (
+        <>
+          <section className="summaryCard">
+            <div className="summaryGrid">
+              <div>
+                <span className="k">Fecha</span>
+                <span className="v">{new Date(venta.fecha).toLocaleString("es-AR")}</span>
               </div>
-            ) : (
-              <p className="ventasInfo">No hay detalles para esta venta.</p>
-            )}
-          </div>
+              <div>
+                <span className="k">Estado</span>
+                <span className="v">{estadoLabel(venta.estadoVenta)}</span>
+              </div>
+              <div>
+                <span className="k">Canal</span>
+                <span className="v">{canalLabel(venta.canal)}</span>
+              </div>
+              <div>
+                <span className="k">Total</span>
+                <span className="v v--money">{money.format(venta.total)}</span>
+              </div>
+            </div>
+          </section>
 
-          <div className="ventaActions">
-            <Link className="ventasBtn ventasBtn--ghost" to="/ventas/mis-ventas">
-              ← Volver
-            </Link>
-            <Link className="ventasBtn" to="/catalogo">
-              Ir al catálogo
-            </Link>
-          </div>
-        </section>
+          <section className="itemsCard">
+            <h2 className="sectionTitle">Items</h2>
+
+            <div className="tableWrap">
+              <table className="itemsTable">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th className="right">Cant.</th>
+                    <th className="right">Precio</th>
+                    <th className="right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(venta.detalles ?? []).map((d) => (
+                    <tr key={`${d.productoId}-${d.nombreProducto}`}>
+                      <td>
+                        <div className="prodName">{d.nombreProducto}</div>
+                        <div className="prodMeta mono">ID: {d.productoId}</div>
+                      </td>
+                      <td className="right">{d.cantidad}</td>
+                      <td className="right">{money.format(d.precioUnitario)}</td>
+                      <td className="right strong">{money.format(d.subtotal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="totalRow">
+              <span>Total</span>
+              <span className="strong">{money.format(venta.total)}</span>
+            </div>
+          </section>
+
+          <section className="entregaCard">
+            <h2 className="sectionTitle">Entrega</h2>
+
+            <div className="entregaGrid">
+              <div>
+                <span className="k">Nombre</span>
+                <span className="v">{venta.nombreEntrega ?? "-"}</span>
+              </div>
+              <div>
+                <span className="k">Teléfono</span>
+                <span className="v">{venta.telefonoEntrega ?? "-"}</span>
+              </div>
+              <div className="col2">
+                <span className="k">Dirección</span>
+                <span className="v">{venta.direccionEntrega ?? "-"}</span>
+              </div>
+              <div>
+                <span className="k">Ciudad</span>
+                <span className="v">{venta.ciudad ?? "-"}</span>
+              </div>
+              <div>
+                <span className="k">Provincia</span>
+                <span className="v">{venta.provincia ?? "-"}</span>
+              </div>
+              <div>
+                <span className="k">Código postal</span>
+                <span className="v">{venta.codigoPostal ?? "-"}</span>
+              </div>
+              <div className="col2">
+                <span className="k">Observaciones</span>
+                <span className="v">{venta.observaciones ?? "-"}</span>
+              </div>
+            </div>
+          </section>
+        </>
       ) : null}
     </main>
   );
