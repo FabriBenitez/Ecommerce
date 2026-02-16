@@ -23,7 +23,7 @@ public class AuthController : ControllerBase
     public AuthController(
         AuthService authService,
         ApplicationDbContext context,
-        IJwtService jwtService, 
+        IJwtService jwtService,
         SecurityLogger securityLogger,
         PasswordHasher passwordHasher
     )
@@ -36,12 +36,19 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public IActionResult Register(RegisterDto dto)
+    public IActionResult Register([FromBody] RegisterDto dto)
     {
-        _authService.Register(dto);
-        return Ok("Usuario registrado");
+        try
+        {
+            _authService.Register(dto);
+            return Ok("Usuario registrado");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
-    
+
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
@@ -55,7 +62,7 @@ public class AuthController : ControllerBase
         if (usuario == null)
         {
             _securityLogger.LoginFail(dto.Email, ip);
-            return Unauthorized("Credenciales inválidas");
+            return Unauthorized("Credenciales invalidas");
         }
 
         // 2. Verificar password (compatibilidad: BCrypt y PBKDF2 legacy)
@@ -64,7 +71,7 @@ public class AuthController : ControllerBase
         if (!passwordOk)
         {
             _securityLogger.LoginFail(dto.Email, ip);
-            return Unauthorized("Credenciales inválidas");
+            return Unauthorized("Credenciales invalidas");
         }
 
         // 3. Obtener roles
@@ -88,12 +95,12 @@ public class AuthController : ControllerBase
 
         _context.RefreshTokens.Add(refreshToken);
 
-        // 6. Auditoría mínima
+        // 6. Auditoria minima
         usuario.UltimoLogin = DateTime.UtcNow;
 
         _context.SaveChanges();
 
-        // ✅ 7. Log de seguridad (OK)
+        // 7. Log de seguridad (OK)
         _securityLogger.LoginOk(usuario.Id, ip);
 
         // 8. Respuesta FINAL
@@ -130,7 +137,7 @@ public class AuthController : ControllerBase
             );
 
         if (storedToken == null)
-            return Unauthorized("Refresh token inválido");
+            return Unauthorized("Refresh token invalido");
 
         var usuario = storedToken.Usuario;
 

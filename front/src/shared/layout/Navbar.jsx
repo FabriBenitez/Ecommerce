@@ -7,7 +7,7 @@ function cx(...classes) {
 }
 
 export default function Navbar() {
-  const { usuario, logout, isAuthenticated } = useAuth();
+  const { usuario, logout, isAuth } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -30,7 +30,7 @@ export default function Navbar() {
             Catálogo
           </NavLink>
 
-          {isAuthenticated ? (
+          {isAuth ? (
             <>
               <NavLink
                 to="/carrito"
@@ -50,7 +50,7 @@ export default function Navbar() {
         </nav>
 
         <div className="nav__right">
-          {isAuthenticated ? (
+          {isAuth ? (
             <>
               <span className="nav__user" title={usuario?.email ?? ""}>
                 {usuario?.email ?? "Usuario"}

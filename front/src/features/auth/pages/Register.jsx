@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/shared/auth/useAuth";
 import AuthCard from "../components/AuthCard";
 import "./AuthPage.css";
-import "../components/LoginForm.css"; // reutilizamos estilos base
+import "../components/LoginForm.css";
 
 export default function Register() {
   const { register } = useAuth();
@@ -13,6 +13,7 @@ export default function Register() {
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -22,13 +23,11 @@ export default function Register() {
 
     try {
       setLoading(true);
-
-      // Ajustá nombres EXACTOS según tu RegisterDto backend
-      await register({ nombreCompleto, telefono, email, password });
-
+      await register({ nombreCompleto, telefono, email, password, confirmPassword });
       navigate("/login");
-    } catch {
-      setError("No se pudo registrar (email existente o error).");
+    } catch (e) {
+      const msg = e?.response?.data ?? e?.message ?? "No se pudo registrar.";
+      setError(String(msg));
     } finally {
       setLoading(false);
     }
@@ -54,7 +53,7 @@ export default function Register() {
             </div>
 
             <div className="authForm__field">
-              <label className="authForm__label">Teléfono</label>
+              <label className="authForm__label">Telefono</label>
               <input
                 className="authForm__input"
                 value={telefono}
@@ -76,13 +75,25 @@ export default function Register() {
             </div>
 
             <div className="authForm__field">
-              <label className="authForm__label">Contraseña</label>
+              <label className="authForm__label">Contrasena</label>
               <input
                 className="authForm__input"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="********"
+                required
+              />
+            </div>
+
+            <div className="authForm__field">
+              <label className="authForm__label">Confirmar contrasena</label>
+              <input
+                className="authForm__input"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="********"
                 required
               />
             </div>

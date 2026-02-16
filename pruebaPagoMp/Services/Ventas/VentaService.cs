@@ -82,7 +82,16 @@ public class VentasService : IVentasService
 
             _context.DetalleVentas.Add(detalle);
         }
-        venta.Observaciones = $"Entrega: {dto.NombreEntrega} - Tel: {dto.TelefonoEntrega} - Dir: {dto.DireccionEntrega}, {dto.Ciudad}, {dto.Provincia} ({dto.CodigoPostal})" + (string.IsNullOrWhiteSpace(dto.Observaciones) ? "" : $" | Obs: {dto.Observaciones}");
+        venta.NombreEntrega = dto.NombreEntrega;
+        venta.TelefonoEntrega = dto.TelefonoEntrega;
+        venta.DireccionEntrega = dto.DireccionEntrega;
+        venta.Ciudad = dto.Ciudad;
+        venta.Provincia = dto.Provincia;
+        venta.CodigoPostal = dto.CodigoPostal;
+
+        // solo lo libre queda en Observaciones
+        venta.Observaciones = dto.Observaciones;
+
 
         venta.Total = total;
         await _context.SaveChangesAsync();
@@ -234,6 +243,13 @@ public class VentasService : IVentasService
             Total = venta.Total,
             EstadoVenta = venta.EstadoVenta,
             Canal = venta.Canal,
+
+            NombreEntrega = venta.NombreEntrega,
+            TelefonoEntrega = venta.TelefonoEntrega,
+            DireccionEntrega = venta.DireccionEntrega,
+            Ciudad = venta.Ciudad,
+            Provincia = venta.Provincia,
+            CodigoPostal = venta.CodigoPostal,
             Observaciones = venta.Observaciones,
 
             Detalles = venta.Detalles.Select(d => new VentaDetalleDto
@@ -245,6 +261,7 @@ public class VentasService : IVentasService
                 Subtotal = d.Subtotal
             }).ToList()
         };
+
     }
 
     public async Task<List<MisVentasItemDto>> ObtenerMisVentasAsync(int usuarioId)

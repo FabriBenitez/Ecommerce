@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import AppLayout from "@/shared/layout/Navbar";;
+import AppLayout from "@/shared/layout/pages/AppLayuout";
+import Comprobante from "@/features/ventas/pages/Comprobante";
 
 // Auth
 import Login from "@/features/auth/pages/Login";
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
           { path: "/pago/pending", element: <PagoPending /> },
           { path: "/pago/failure", element: <PagoFailure /> },
           { path: "/pago/:resultado", element: <PagoResultado /> },
+          { path: "/comprobante/:id", element: <Comprobante /> }
         ],
       },
 

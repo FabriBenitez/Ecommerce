@@ -25,6 +25,15 @@ public class AuthService : IAuthService
 
     public void Register(RegisterDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.NombreCompleto) ||
+            string.IsNullOrWhiteSpace(dto.Password) || string.IsNullOrWhiteSpace(dto.ConfirmPassword))
+        {
+            throw new Exception("Faltan campos obligatorios para registrarse.");
+        }
+
+        if (!string.Equals(dto.Password, dto.ConfirmPassword, StringComparison.Ordinal))
+            throw new Exception("Las contrasenas no coinciden.");
+
         if (_context.Usuarios.Any(u => u.Email == dto.Email))
             throw new Exception("El email ya existe");
 
@@ -34,6 +43,7 @@ public class AuthService : IAuthService
         {
             Email = dto.Email,
             NombreCompleto = dto.NombreCompleto,
+            Telefono = dto.telefono,
             PasswordHash = passwordHash,
             FechaCreacion = DateTime.Now,
             DigitoVerificador = "" // se calcula en PASO 5
@@ -59,10 +69,10 @@ public class AuthService : IAuthService
             .FirstOrDefault(u => u.Email == dto.Email && u.Activo);
 
         if (usuario == null)
-            throw new Exception("Credenciales inválidas");
+            throw new Exception("Credenciales invalidas");
 
         if (BCrypt.Net.BCrypt.Verify(dto.Password, usuario.PasswordHash))
-            throw new Exception("Credenciales inválidas");
+            throw new Exception("Credenciales invalidas");
 
         var roles = _context.UsuarioRoles
             .Where(ur => ur.UsuarioId == usuario.Id)

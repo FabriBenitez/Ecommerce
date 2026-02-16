@@ -6,13 +6,23 @@ import "./MisVentas.css";
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 
 function estadoLabel(e) {
-  // si tu enum llega como número, podés mapearlo acá. Si llega como string, mostrala directo.
-  return typeof e === "string" ? e : `Estado ${e}`;
+  const map = {
+    1: "Pendiente",
+    2: "Pagada",
+    3: "Cancelada",
+  };
+  return map[e] ?? String(e ?? "");
 }
 
 function canalLabel(c) {
-  return typeof c === "string" ? c : `Canal ${c}`;
+  const map = {
+    1: "Web",
+    2: "Presencial",
+  };
+  return map[c] ?? String(c ?? "");
 }
+
+
 
 export default function MisVentas() {
   const [items, setItems] = useState([]);
@@ -62,7 +72,7 @@ export default function MisVentas() {
               <table className="misVentasTable">
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>Venta</th>
                     <th>Fecha</th>
                     <th>Total</th>
                     <th>Estado</th>

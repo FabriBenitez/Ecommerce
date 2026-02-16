@@ -6,10 +6,20 @@ import "./VentaDetalle.css";
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 
 function estadoLabel(e) {
-  return typeof e === "string" ? e : `Estado ${e}`;
+  const map = {
+    1: "Pendiente",
+    2: "Pagada",
+    3: "Cancelada",
+  };
+  return map[e] ?? String(e ?? "");
 }
+
 function canalLabel(c) {
-  return typeof c === "string" ? c : `Canal ${c}`;
+  const map = {
+    1: "Web",
+    2: "Presencial",
+  };
+  return map[c] ?? String(c ?? "");
 }
 
 export default function VentaDetalle() {
@@ -54,7 +64,13 @@ export default function VentaDetalle() {
 
       {!loading && !error && venta ? (
         <>
+          <div className="ventaDetalleActions">
+            <button className="printBtn" onClick={() => window.print()}>
+              Imprimir comprobante
+            </button>
+          </div>
           <section className="summaryCard">
+
             <div className="summaryGrid">
               <div>
                 <span className="k">Fecha</span>
@@ -83,7 +99,7 @@ export default function VentaDetalle() {
                 <thead>
                   <tr>
                     <th>Producto</th>
-                    <th className="right">Cant.</th>
+                    <th className="right">Cantidad</th>
                     <th className="right">Precio</th>
                     <th className="right">Subtotal</th>
                   </tr>
@@ -93,7 +109,6 @@ export default function VentaDetalle() {
                     <tr key={`${d.productoId}-${d.nombreProducto}`}>
                       <td>
                         <div className="prodName">{d.nombreProducto}</div>
-                        <div className="prodMeta mono">ID: {d.productoId}</div>
                       </td>
                       <td className="right">{d.cantidad}</td>
                       <td className="right">{money.format(d.precioUnitario)}</td>
@@ -105,7 +120,7 @@ export default function VentaDetalle() {
             </div>
 
             <div className="totalRow">
-              <span>Total</span>
+              <span>Total: </span>
               <span className="strong">{money.format(venta.total)}</span>
             </div>
           </section>
@@ -140,7 +155,12 @@ export default function VentaDetalle() {
               </div>
               <div className="col2">
                 <span className="k">Observaciones</span>
-                <span className="v">{venta.observaciones ?? "-"}</span>
+                <span className="v v--multiline">
+                  {(venta.observaciones ?? "-")
+                    .replaceAll(" | ", "\n")
+                    .replaceAll(" - ", "\n")}
+                </span>
+
               </div>
             </div>
           </section>
