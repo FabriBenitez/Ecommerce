@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using pruebaPagoMp.Models;
 using pruebaPagoMp.Models.Interfaces;
 using pruebaPagoMp.Data.Configurations;
+using pruebaPagoMp.Models.Caja;
 using pruebaPagoMp.Models.Ventas;
 
 namespace pruebaPagoMp.Data;
@@ -32,8 +33,9 @@ public partial class ApplicationDbContext : DbContext
     public DbSet<Venta> Ventas { get; set; } = null!;
     public DbSet<DetalleVenta> DetalleVentas { get; set; } = null!;
 
-
-    
+    public DbSet<VentaPago> VentaPagos => Set<VentaPago>();
+    public DbSet<MovimientoCaja> MovimientosCaja => Set<MovimientoCaja>();
+    public DbSet<NotaCredito> NotasCredito => Set<NotaCredito>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=DefaultConnection");
@@ -211,6 +213,17 @@ public partial class ApplicationDbContext : DbContext
                 .IsUnicode(false);
         });
 
+        modelBuilder.Entity<pruebaPagoMp.Models.Ventas.VentaPago>()
+            .Property(x => x.Monto)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Caja.MovimientoCaja>()
+            .Property(x => x.Monto)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Caja.NotaCredito>()
+            .Property(x => x.SaldoDisponible)
+            .HasColumnType("decimal(18,2)");
 
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfiguration(new VentaConfiguration());

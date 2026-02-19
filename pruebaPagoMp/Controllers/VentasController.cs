@@ -70,5 +70,35 @@ public class VentasController : ControllerBase
         var ventas = await _ventasService.ObtenerMisVentasAsync(usuarioId);
         return Ok(ventas);
     }
+    [HttpPost]
+    [Authorize(Roles = "AdminVentas")]
+    public async Task<IActionResult> Crear([FromBody] CrearVentaPresencialDto dto)
+    {
+        var usuarioIdStr =
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            User.FindFirstValue("sub");
+
+        if (!int.TryParse(usuarioIdStr, out var adminUsuarioId))
+            return Unauthorized("Token invÃ¡lido (sin usuarioId).");
+
+        var ventaId = await _ventasService.CrearVentaPresencialAsync(adminUsuarioId, dto);
+        return Ok(new { ventaId });
+    }
+
+    [HttpPost("presencial")]
+    [Authorize(Roles = "AdminVentas")]
+    public async Task<ActionResult<int>> CrearVentaPresencial([FromBody] CrearVentaPresencialDto dto)
+    {
+        var usuarioIdStr =
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            User.FindFirstValue("sub");
+
+        if (!int.TryParse(usuarioIdStr, out var adminUsuarioId))
+            return Unauthorized("Token inválido (sin usuarioId).");
+
+        var ventaId = await _ventasService.CrearVentaPresencialAsync(adminUsuarioId, dto);
+        return Ok(ventaId);
+    }
+
 
 }

@@ -10,6 +10,9 @@ public class VentaDto
     public EstadoVenta EstadoVenta { get; set; }
     public CanalVenta Canal { get; set; }
     
+    public string? ClienteDni { get; set; }
+    public string? ClienteNombre { get; set; }
+
     public string? NombreEntrega { get; set; }
     public string? TelefonoEntrega { get; set; }
     public string? DireccionEntrega { get; set; }
@@ -19,4 +22,5 @@ public class VentaDto
     public string? Observaciones { get; set; }
 
     public List<VentaDetalleDto> Detalles { get; set; } = new();
+    public List<PagoItemDto> Pagos { get; set; } = new();
 }

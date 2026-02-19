@@ -26,6 +26,7 @@ public class AuthService : IAuthService
     public void Register(RegisterDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.NombreCompleto) ||
+            string.IsNullOrWhiteSpace(dto.Dni) ||
             string.IsNullOrWhiteSpace(dto.Password) || string.IsNullOrWhiteSpace(dto.ConfirmPassword))
         {
             throw new Exception("Faltan campos obligatorios para registrarse.");
@@ -43,6 +44,7 @@ public class AuthService : IAuthService
         {
             Email = dto.Email,
             NombreCompleto = dto.NombreCompleto,
+            Dni = dto.Dni,
             Telefono = dto.telefono,
             PasswordHash = passwordHash,
             FechaCreacion = DateTime.Now,

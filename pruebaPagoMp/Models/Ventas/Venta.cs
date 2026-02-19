@@ -13,6 +13,8 @@ public class Venta
     public decimal Total { get; set; }
     public EstadoVenta EstadoVenta { get; set; } = EstadoVenta.Pendiente;
     public CanalVenta Canal { get; set; }
+    public string? ClienteDni { get; set; }
+    public string? ClienteNombre { get; set; }
 
     public ICollection<DetalleVenta> Detalles { get; set; } = new List<DetalleVenta>();
 
@@ -30,5 +32,7 @@ public class Venta
     public string? MercadoPagoUrlPago { get; set; }
     public string? MercadoPagoPaymentId { get; set; }
     public string? MercadoPagoEstado { get; set; }
+
+    public ICollection<VentaPago> Pagos { get; set; } = new List<VentaPago>();
 }
 

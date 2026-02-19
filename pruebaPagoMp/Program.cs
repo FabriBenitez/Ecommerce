@@ -8,6 +8,9 @@ using pruebaPagoMp.Models;
 using pruebaPagoMp.Security;
 using pruebaPagoMp.Services.Carritos;
 
+
+using BCrypt.Net;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 1️⃣ SERVICES
@@ -81,6 +84,42 @@ builder.Services.AddAuthorization();
 // 2️⃣ BUILD
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    // 1) asegurate que exista el rol AdminVentas
+    var rol = await db.Roles.FirstOrDefaultAsync(r => r.Nombre == "AdminVentas");
+    if (rol == null)
+    {
+        rol = new Rol { Nombre = "AdminVentas", Descripcion = "Admin de ventas mostrador" };
+        db.Roles.Add(rol);
+        await db.SaveChangesAsync();
+    }
+
+    // 2) crear usuario si no existe
+    var email = "adminventas@demo.com";
+    var user = await db.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+
+    if (user == null)
+    {
+        user = new Usuario
+        {
+            Email = email,
+            NombreCompleto = "Admin Ventas",
+            Telefono = "000",
+            Activo = true,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+            DigitoVerificador = "seed" // ajusta si tu sistema lo calcula
+        };
+        db.Usuarios.Add(user);
+        await db.SaveChangesAsync();
+
+        db.UsuarioRoles.Add(new UsuarioRol { UsuarioId = user.Id, RolId = rol.Id });
+        await db.SaveChangesAsync();
+    }
+}
 
 // 3️⃣ MIDDLEWARE
 
@@ -168,3 +207,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+

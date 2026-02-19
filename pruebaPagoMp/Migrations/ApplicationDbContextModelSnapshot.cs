@@ -17,7 +17,7 @@ namespace pruebaPagoMp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.17")
+                .HasAnnotation("ProductVersion", "7.0.20")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -133,6 +133,66 @@ namespace pruebaPagoMp.Migrations
                     b.HasIndex("RolId");
 
                     b.ToTable("UsuarioRoles");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Caja.MovimientoCaja", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Concepto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MedioPago")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Monto")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Referencia")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("VentaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VentaId");
+
+                    b.ToTable("MovimientosCaja");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Caja.NotaCredito", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClienteDni")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("SaldoDisponible")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NotasCredito");
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.Carrito", b =>
@@ -396,6 +456,9 @@ namespace pruebaPagoMp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Dni")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -480,6 +543,12 @@ namespace pruebaPagoMp.Migrations
                     b.Property<string>("Ciudad")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ClienteDni")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClienteNombre")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CodigoPostal")
                         .HasColumnType("nvarchar(max)");
 
@@ -531,6 +600,36 @@ namespace pruebaPagoMp.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("Ventas", (string)null);
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.VentaPago", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MedioPago")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Monto")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Referencia")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("VentaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VentaId");
+
+                    b.ToTable("VentaPagos");
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.WebhookLog", b =>
@@ -598,6 +697,15 @@ namespace pruebaPagoMp.Migrations
                     b.Navigation("Rol");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Caja.MovimientoCaja", b =>
+                {
+                    b.HasOne("pruebaPagoMp.Models.Ventas.Venta", "Venta")
+                        .WithMany()
+                        .HasForeignKey("VentaId");
+
+                    b.Navigation("Venta");
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.Carrito", b =>
@@ -701,6 +809,17 @@ namespace pruebaPagoMp.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.VentaPago", b =>
+                {
+                    b.HasOne("pruebaPagoMp.Models.Ventas.Venta", "Venta")
+                        .WithMany("Pagos")
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Venta");
+                });
+
             modelBuilder.Entity("Rol", b =>
                 {
                     b.Navigation("UsuarioRoles");
@@ -739,6 +858,8 @@ namespace pruebaPagoMp.Migrations
             modelBuilder.Entity("pruebaPagoMp.Models.Ventas.Venta", b =>
                 {
                     b.Navigation("Detalles");
+
+                    b.Navigation("Pagos");
                 });
 #pragma warning restore 612, 618
         }
