@@ -22,51 +22,149 @@ public class VentasService : IVentasService
     }
     public async Task<int> RegistrarDevolucionPresencialAsync(int ventaId, DevolucionPresencialDto dto)
     {
-        if (dto.Monto <= 0) throw new InvalidOperationException("Monto inválido.");
+        if (string.IsNullOrWhiteSpace(dto.ClienteDni))
+            throw new InvalidOperationException("Debe informar el DNI del cliente.");
+
+        if (dto.Items == null || dto.Items.Count == 0)
+            throw new InvalidOperationException("Debe incluir al menos un item a devolver.");
+
+        if (dto.MontoDevolver < 0)
+            throw new InvalidOperationException("Monto de devolución inválido.");
+
+        // Si querés permitir generar NC con 0, sacá esta validación
+        if (dto.GenerarNotaCredito && dto.MontoDevolver <= 0)
+            throw new InvalidOperationException("Para generar nota de crédito, el monto debe ser mayor a cero.");
 
         await using var tx = await _context.Database.BeginTransactionAsync();
 
-        var venta = await _context.Ventas.FirstOrDefaultAsync(v => v.Id == ventaId);
-        if (venta == null) throw new InvalidOperationException("Venta inexistente.");
-        if (venta.Canal != CanalVenta.Presencial) throw new InvalidOperationException("Solo aplica a ventas presenciales.");
+        var venta = await _context.Ventas
+            .Include(v => v.Detalles)
+            .FirstOrDefaultAsync(v => v.Id == ventaId);
 
-        // 1) Nota de crédito (acumula por DNI)
-        var nc = await _context.Set<NotaCredito>()
-            .FirstOrDefaultAsync(x => x.ClienteDni == dto.ClienteDni);
+        if (venta == null)
+            throw new InvalidOperationException("Venta inexistente.");
 
-        if (nc == null)
+        if (venta.Canal != CanalVenta.Presencial)
+            throw new InvalidOperationException("Solo aplica a ventas presenciales.");
+
+        if (venta.EstadoVenta == EstadoVenta.Cancelada)
+            throw new InvalidOperationException("La venta ya está cancelada.");
+
+        var dni = dto.ClienteDni.Trim();
+
+        // ✅ Si la venta no tenía DNI (tu caso), lo guardamos ahora
+        if (string.IsNullOrWhiteSpace(venta.ClienteDni))
+            venta.ClienteDni = dni;
+        else if (!string.Equals(venta.ClienteDni, dni, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("El DNI informado no coincide con la venta.");
+
+        // (Opcional) si querés guardar nombre si vino y no estaba
+        if (string.IsNullOrWhiteSpace(venta.ClienteNombre) && !string.IsNullOrWhiteSpace(dto.ClienteNombre))
+            venta.ClienteNombre = dto.ClienteNombre.Trim();
+
+        var itemsDevueltos = dto.Items
+            .GroupBy(i => i.ProductoId)
+            .Select(g => new { ProductoId = g.Key, Cantidad = g.Sum(x => x.Cantidad) })
+            .ToList();
+
+        if (itemsDevueltos.Any(i => i.Cantidad <= 0))
+            throw new InvalidOperationException("Las cantidades a devolver deben ser mayores a cero.");
+
+        var detalleCantidades = venta.Detalles
+            .GroupBy(d => d.ProductoId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Cantidad));
+
+        foreach (var item in itemsDevueltos)
         {
-            nc = new NotaCredito
+            if (!detalleCantidades.TryGetValue(item.ProductoId, out var cantidadVendida))
+                throw new InvalidOperationException($"El producto {item.ProductoId} no pertenece a la venta.");
+
+            if (item.Cantidad > cantidadVendida)
+                throw new InvalidOperationException($"La cantidad devuelta de producto {item.ProductoId} supera la cantidad vendida.");
+        }
+
+        var productosIds = itemsDevueltos.Select(i => i.ProductoId).ToList();
+        var productos = await _context.Productos
+            .Where(p => productosIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+
+        // ✅ Restock
+        foreach (var item in itemsDevueltos)
+        {
+            if (!productos.TryGetValue(item.ProductoId, out var producto))
+                throw new InvalidOperationException($"Producto inexistente: {item.ProductoId}");
+
+            producto.Stock += item.Cantidad;
+        }
+
+        var devolucionTotal =
+            detalleCantidades.Count == itemsDevueltos.Count &&
+            detalleCantidades.All(dc => itemsDevueltos.Any(i => i.ProductoId == dc.Key && i.Cantidad == dc.Value));
+
+        int notaCreditoId = 0;
+
+        // ✅ Nota crédito
+        if (dto.GenerarNotaCredito && dto.MontoDevolver > 0)
+        {
+            var notaCredito = await _context.NotasCredito
+                .FirstOrDefaultAsync(x => x.ClienteDni == dni);
+
+            if (notaCredito == null)
             {
-                ClienteDni = dto.ClienteDni,
-                SaldoDisponible = dto.Monto,
-                FechaCreacion = DateTime.UtcNow
-            };
-            _context.Add(nc);
+                notaCredito = new NotaCredito
+                {
+                    ClienteDni = dni,
+                    SaldoDisponible = dto.MontoDevolver,
+                    FechaCreacion = DateTime.UtcNow
+                };
+                _context.NotasCredito.Add(notaCredito);
+            }
+            else
+            {
+                notaCredito.SaldoDisponible += dto.MontoDevolver;
+            }
+
+            await _context.SaveChangesAsync();
+            notaCreditoId = notaCredito.Id;
+        }
+
+        // ✅ Caja (Egreso) SOLO si devolvés plata real (no nota crédito)
+        if (!dto.GenerarNotaCredito && dto.MontoDevolver > 0)
+        {
+            var motivo = string.IsNullOrWhiteSpace(dto.Motivo)
+                ? ""
+                : $" - {dto.Motivo.Trim()}";
+
+            _context.MovimientosCaja.Add(new MovimientoCaja
+            {
+                Tipo = TipoMovimientoCaja.Egreso,
+                Monto = dto.MontoDevolver,
+                Concepto = $"Devolución venta presencial #{ventaId}{motivo}",
+                VentaId = ventaId,
+                MedioPago = MedioPago.Efectivo
+            });
+        }
+
+        // ✅ Estado / Observaciones
+        if (devolucionTotal)
+        {
+            venta.EstadoVenta = EstadoVenta.Cancelada;
+            venta.Observaciones = AppendObs(venta.Observaciones,
+                $"Venta cancelada por devolución total ({DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC).");
         }
         else
         {
-            nc.SaldoDisponible += dto.Monto;
+            venta.Observaciones = AppendObs(venta.Observaciones,
+                $"Devolución parcial registrada ({DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC).");
         }
-
-        // 2) Movimiento de caja EGRESO (nota crédito)
-        var mov = new MovimientoCaja
-        {
-            Tipo = TipoMovimientoCaja.Egreso,
-            Monto = dto.Monto,
-            Concepto = string.IsNullOrWhiteSpace(dto.Motivo) ? "Devolución / Nota de crédito" : $"Devolución: {dto.Motivo}",
-            VentaId = ventaId,
-            MedioPago = MedioPago.NotaCredito
-        };
-        _context.Add(mov);
-
-        // 3) (opcional) marcar venta cancelada si querés cancelación total
-        // venta.EstadoVenta = EstadoVenta.Cancelada;
 
         await _context.SaveChangesAsync();
         await tx.CommitAsync();
 
-        return nc.Id;
+        return notaCreditoId;
+
+        static string AppendObs(string? actual, string nuevo)
+            => string.IsNullOrWhiteSpace(actual) ? nuevo : $"{actual} | {nuevo}";
     }
 
 
@@ -285,10 +383,11 @@ public class VentasService : IVentasService
     venta.Total = total;
     await _context.SaveChangesAsync();
 
-    // 5) Validar pagos combinados: suma == total
-    var sumaPagos = dto.Pagos.Sum(p => p.Monto);
-    if (sumaPagos != total)
-        throw new InvalidOperationException($"La suma de pagos ({sumaPagos}) no coincide con el total ({total}).");
+    // 5) Validar pagos combinados: suma == total (con redondeo para evitar falso mismatch)
+    var sumaPagos = decimal.Round(dto.Pagos.Sum(p => p.Monto), 2);
+    var totalRedondeado = decimal.Round(total, 2);
+    if (Math.Abs(sumaPagos - totalRedondeado) > 0.01m)
+        throw new InvalidOperationException($"La suma de pagos ({sumaPagos}) no coincide con el total ({totalRedondeado}).");
 
     // 6) Nota de crédito (si aplica): validar saldo y descontar
     // Regla opción 1: NotaCredito NO genera ingreso en caja (porque no entra plata nueva)
@@ -352,6 +451,7 @@ public class VentasService : IVentasService
             .AsNoTracking()
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
+            .Include(v => v.Pagos)
             .FirstOrDefaultAsync(v => v.Id == ventaId);
 
         if (venta == null) return null;
@@ -369,6 +469,8 @@ public class VentasService : IVentasService
 
             ClienteDni = venta.ClienteDni,
             ClienteNombre = venta.ClienteNombre,
+            EstadoRetiro = venta.EstadoRetiro,
+
 
             NombreEntrega = venta.NombreEntrega,
             TelefonoEntrega = venta.TelefonoEntrega,
@@ -385,6 +487,12 @@ public class VentasService : IVentasService
                 Cantidad = d.Cantidad,
                 PrecioUnitario = d.PrecioUnitario,
                 Subtotal = d.Subtotal
+            }).ToList(),
+            Pagos = venta.Pagos.Select(p => new PagoItemDto
+            {
+                MedioPago = p.MedioPago,
+                Monto = p.Monto,
+                Referencia = p.Referencia
             }).ToList()
         };
 
@@ -420,18 +528,29 @@ public class VentasService : IVentasService
             })
             .ToListAsync();
     }
-    public async Task<List<FacturaPresencialItemDto>> ObtenerHistorialPresencialAsync()
+    public async Task<List<HistorialPresencialItemDto>> ObtenerHistorialPresencialAsync(
+        DateTime? desde,
+        DateTime? hasta,
+        string? dni,
+        EstadoVenta? estado)
     {
-        return await _context.Ventas
+        var q = _context.Ventas
             .AsNoTracking()
-            .Where(v => v.Canal == CanalVenta.Presencial)
+            .Where(v => v.Canal == CanalVenta.Presencial);
+
+        if (desde.HasValue) q = q.Where(v => v.Fecha >= desde.Value);
+        if (hasta.HasValue) q = q.Where(v => v.Fecha <= hasta.Value);
+        if (!string.IsNullOrWhiteSpace(dni)) q = q.Where(v => v.ClienteDni == dni.Trim());
+        if (estado.HasValue) q = q.Where(v => v.EstadoVenta == estado.Value);
+
+        return await q
             .OrderByDescending(v => v.Fecha)
-            .Select(v => new FacturaPresencialItemDto
+            .Select(v => new HistorialPresencialItemDto
             {
-                VentaId = v.Id,
+                Id = v.Id,
                 Fecha = v.Fecha,
-                ClienteDni = v.ClienteDni,         // si existe en tu entidad Venta
-                ClienteNombre = v.ClienteNombre,   // si existe en tu entidad Venta
+                ClienteDni = v.ClienteDni,
+                ClienteNombre = v.ClienteNombre,
                 Total = v.Total,
                 EstadoVenta = v.EstadoVenta,
                 Canal = v.Canal
@@ -440,3 +559,5 @@ public class VentasService : IVentasService
     }
 
 }
+
+

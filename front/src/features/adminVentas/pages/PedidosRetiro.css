@@ -1,0 +1,213 @@
+.prPage {
+  display: grid;
+  gap: 12px;
+}
+
+.prHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.prTitle {
+  margin: 0;
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #18251f;
+}
+
+.prSub {
+  margin: 6px 0 0;
+  color: #1ea95b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.prRefresh {
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.prToolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.prTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prTab {
+  border: 1px solid #d6e3db;
+  background: #f2f6f4;
+  color: #415248;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.prTab.isActive {
+  border-color: #93ddb4;
+  background: #dff7e9;
+  color: #108046;
+}
+
+.prSearchWrap {
+  width: min(420px, 100%);
+}
+
+.prMsg {
+  margin: 0;
+  color: #5d6e64;
+}
+
+.prErr {
+  color: #b00020;
+}
+
+.prTable th {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  color: #7a8981;
+}
+
+.prId {
+  font-weight: 900;
+  color: #1f2d25;
+}
+
+.prClient {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: #2b62be;
+  background: #e5efff;
+}
+
+.prClientName {
+  font-weight: 800;
+  color: #1f2d25;
+}
+
+.prClientDni {
+  color: #6a7870;
+  font-size: 12px;
+}
+
+.prTotal {
+  font-weight: 900;
+}
+
+.prStatus {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+
+.prStatus.s1 {
+  background: #fff4d8;
+  color: #a26000;
+  border-color: #ffe2a2;
+}
+
+.prStatus.s2 {
+  background: #e7efff;
+  color: #255fc5;
+  border-color: #c7d9ff;
+}
+
+.prStatus.s3 {
+  background: #e7f8ec;
+  color: #137c42;
+  border-color: #bde7ca;
+}
+
+.prStatus.s4 {
+  background: #eef2f6;
+  color: #66737f;
+  border-color: #d8e0e8;
+}
+
+.prActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.prActionBtn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.prDetailBtn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.prDone {
+  font-size: 12px;
+  color: #6a7870;
+  font-weight: 800;
+}
+
+.prEmpty {
+  color: #6a7870;
+}
+
+@media (max-width: 1000px) {
+  .prTitle {
+    font-size: 34px;
+  }
+
+  .prToolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .prSearchWrap {
+    width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .prHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .prTitle {
+    font-size: 30px;
+  }
+
+  .prRefresh {
+    width: 100%;
+  }
+}

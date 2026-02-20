@@ -27,7 +27,7 @@ public class VentasController : ControllerBase
             User.FindFirstValue("sub");
 
         if (!int.TryParse(usuarioIdStr, out var usuarioId))
-            return Unauthorized("Token inválido (sin usuarioId).");
+            return Unauthorized("Token invalido (sin usuarioId).");
 
         var resp = await _ventasService.CheckoutVentaWebAsync(usuarioId, dto);
         return Ok(resp);
@@ -41,7 +41,7 @@ public class VentasController : ControllerBase
             User.FindFirstValue("sub");
 
         if (!int.TryParse(usuarioIdStr, out var usuarioId))
-            return Unauthorized("Token inválido (sin usuarioId).");
+            return Unauthorized("Token invalido (sin usuarioId).");
 
         var esAdminVentas = User.IsInRole("AdminVentas");
 
@@ -65,7 +65,7 @@ public class VentasController : ControllerBase
             User.FindFirstValue("sub");
 
         if (!int.TryParse(usuarioIdStr, out var usuarioId))
-            return Unauthorized("Token inválido (sin usuarioId).");
+            return Unauthorized("Token invalido (sin usuarioId).");
 
         var ventas = await _ventasService.ObtenerMisVentasAsync(usuarioId);
         return Ok(ventas);
@@ -79,7 +79,7 @@ public class VentasController : ControllerBase
             User.FindFirstValue("sub");
 
         if (!int.TryParse(usuarioIdStr, out var adminUsuarioId))
-            return Unauthorized("Token invÃ¡lido (sin usuarioId).");
+            return Unauthorized("Token invalido (sin usuarioId).");
 
         var ventaId = await _ventasService.CrearVentaPresencialAsync(adminUsuarioId, dto);
         return Ok(new { ventaId });
@@ -94,7 +94,7 @@ public class VentasController : ControllerBase
             User.FindFirstValue("sub");
 
         if (!int.TryParse(usuarioIdStr, out var adminUsuarioId))
-            return Unauthorized("Token inválido (sin usuarioId).");
+            return Unauthorized("Token invalido (sin usuarioId).");
 
         var ventaId = await _ventasService.CrearVentaPresencialAsync(adminUsuarioId, dto);
         return Ok(ventaId);
@@ -102,3 +102,4 @@ public class VentasController : ControllerBase
 
 
 }
+

@@ -1,0 +1,10 @@
+.adminShell {
+  min-height: 100vh;
+  background: #f5f7f6;
+}
+
+.adminMain {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px;
+}

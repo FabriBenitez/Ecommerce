@@ -22,6 +22,10 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
         builder.Property(v => v.Canal)
             .IsRequired();
 
+        builder.Property(v => v.EstadoRetiro)
+            .HasDefaultValue(pruebaPagoMp.Models.Ventas.Enums.EstadoRetiro.Pendiente)
+            .IsRequired();
+
         builder.Property(v => v.Fecha)
             .IsRequired();
 
@@ -33,6 +37,11 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
         builder.HasMany(v => v.Detalles)
             .WithOne(d => d.Venta)
             .HasForeignKey(d => d.VentaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(v => v.Pagos)
+            .WithOne(vp => vp.Venta)
+            .HasForeignKey(vp => vp.VentaId)
             .OnDelete(DeleteBehavior.Cascade);
             
         builder.Property(v => v.MercadoPagoPreferenceId)

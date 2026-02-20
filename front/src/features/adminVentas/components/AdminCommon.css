@@ -1,0 +1,160 @@
+.aCard {
+  background: #fff;
+  border: 1px solid #dde7e1;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 20px rgba(20, 36, 27, 0.06);
+}
+
+.aGrid2 {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 16px;
+}
+
+.aTitle {
+  margin: 0 0 6px;
+  font-size: 38px;
+  font-weight: 900;
+  color: #19261f;
+  letter-spacing: -0.7px;
+}
+
+.aSub {
+  margin: 0 0 20px;
+  color: #567361;
+  font-size: 14px;
+}
+
+.aRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.aBtn {
+  border: none;
+  background: linear-gradient(135deg, #20c962 0%, #1aa555 100%);
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.aBtn:hover {
+  filter: brightness(0.97);
+}
+
+.aBtnGhost {
+  border: 1px solid #cfddd4;
+  background: #fff;
+  color: #26342c;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.aInput {
+  height: 42px;
+  border: 1px solid #d8e2dc;
+  border-radius: 12px;
+  padding: 0 12px;
+  outline: none;
+  width: 100%;
+}
+
+.aInput:focus {
+  border-color: #18a058;
+}
+
+.aTableWrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.aTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 740px;
+}
+
+.aTable th {
+  text-align: left;
+  font-size: 11px;
+  color: #666;
+  padding: 11px 12px;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+}
+
+.aTable td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #eef2ef;
+  vertical-align: top;
+}
+
+.aRight {
+  text-align: right;
+}
+
+.aBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid #e5e5e5;
+  background: #fafafa;
+}
+
+.aBadge--green {
+  background: #eaf7ef;
+  border-color: #bfe8d0;
+  color: #0a6a33;
+}
+
+.aBadge--yellow {
+  background: #fff7e6;
+  border-color: #ffe3a4;
+  color: #8a5a00;
+}
+
+.aBadge--gray {
+  background: #f2f2f2;
+  border-color: #e1e1e1;
+  color: #555;
+}
+
+@media (max-width: 900px) {
+  .aGrid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .aTable {
+    min-width: 620px;
+  }
+
+  .aTitle {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .aCard {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .aTitle {
+    font-size: 28px;
+  }
+
+  .aSub {
+    margin-bottom: 14px;
+  }
+}

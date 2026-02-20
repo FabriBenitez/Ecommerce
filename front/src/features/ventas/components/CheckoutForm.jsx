@@ -7,6 +7,7 @@ export default function CheckoutForm({
   error = null,
   initial = {},
 }) {
+  const [clienteDni, setClienteDni] = useState(initial.clienteDni ?? "");
   const [nombreEntrega, setNombreEntrega] = useState(initial.nombreEntrega ?? "");
   const [telefonoEntrega, setTelefonoEntrega] = useState(initial.telefonoEntrega ?? "");
   const [direccionEntrega, setDireccionEntrega] = useState(initial.direccionEntrega ?? "");
@@ -18,6 +19,7 @@ export default function CheckoutForm({
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit?.({
+      clienteDni,
       nombreEntrega,
       telefonoEntrega,
       direccionEntrega,
@@ -38,6 +40,18 @@ export default function CheckoutForm({
       </header>
 
       <div className="checkoutForm__grid">
+        <div className="checkoutForm__field">
+          <label className="checkoutForm__label" htmlFor="clienteDni">DNI cliente</label>
+          <input
+            id="clienteDni"
+            className="checkoutForm__input"
+            value={clienteDni}
+            onChange={(e) => setClienteDni(e.target.value)}
+            placeholder="30123456"
+            required
+          />
+        </div>
+
         <div className="checkoutForm__field">
           <label className="checkoutForm__label" htmlFor="nombreEntrega">Nombre entrega</label>
           <input

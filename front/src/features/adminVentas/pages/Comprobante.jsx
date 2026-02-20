@@ -1,25 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ventaPorId } from "../api/ventas.api";
-import "@/features/adminVentas/pages/Comprobante.css";
+import { retiroDetalle } from "../api/adminVentas.api";
+import "./Comprobante.css";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 const medioMap = { 1: "Efectivo", 2: "Debito", 3: "Credito", 4: "Transferencia", 5: "Nota credito" };
 
 export default function Comprobante() {
-  const { id } = useParams();
+  const { ventaId } = useParams();
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
   useEffect(() => {
     let alive = true;
-
     (async () => {
       try {
-        setErr("");
         setLoading(true);
-        const data = await ventaPorId(id);
+        const data = await retiroDetalle(ventaId);
         if (!alive) return;
         setVenta(data);
       } catch (e) {
@@ -33,14 +31,14 @@ export default function Comprobante() {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [ventaId]);
 
   const tieneNotaCredito = (venta?.pagos ?? []).some((p) => p.medioPago === 5);
 
   return (
     <div className="compPage">
       <div className="compActions no-print">
-        <Link className="compBtn compBtnGhost" to={`/ventas/${id}`}>Volver</Link>
+        <Link className="compBtn compBtnGhost" to="/admin/facturas">Volver</Link>
         <button className="compBtn" onClick={() => window.print()}>Imprimir</button>
       </div>
 
@@ -60,7 +58,7 @@ export default function Comprobante() {
 
             <div className="compMeta">
               <span className="compBadge">COMPROBANTE ORIGINAL</span>
-              <h2>Venta #{venta.id}</h2>
+              <h2>Venta #{ventaId}</h2>
               <p>Fecha: {new Date(venta.fecha).toLocaleString("es-AR")}</p>
               <p>DNI Cliente: {venta.clienteDni ?? "-"}</p>
               <p>{venta.clienteNombre ?? "-"}</p>

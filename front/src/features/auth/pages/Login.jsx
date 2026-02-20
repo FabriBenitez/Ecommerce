@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/shared/auth/useAuth";
+import { getUserRoles } from "@/shared/auth/roles";
 import AuthCard from "../components/AuthCard";
 import LoginForm from "../components/LoginForm";
 import "./AuthPage.css";
@@ -18,11 +19,22 @@ export default function Login() {
       setLoading(true);
 
       await login({ email, password });
+      const roles = getUserRoles();
 
-      // Después lo podés mandar a /catalogo o /carrito
-      navigate("/catalogo");
+      if (roles.includes("AdminVentas")) {
+        navigate("/admin");
+      } else if (roles.includes("Cliente")) {
+        navigate("/catalogo");
+      } else {
+        navigate("/sin-acceso");
+      }
     } catch (e) {
-      setError(e?.message ?? "No se pudo iniciar sesión.");
+      const apiError = e?.response?.data;
+      const msg =
+        typeof apiError === "string"
+          ? apiError
+          : apiError?.error ?? e?.message ?? "No se pudo iniciar sesion.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -32,8 +44,8 @@ export default function Login() {
     <main className="authPage">
       <div className="authPage__container">
         <AuthCard
-          title="Iniciar sesión"
-          subtitle="Ingresá con tu email y contraseña para comprar y ver tus ventas."
+          title="Iniciar sesion"
+          subtitle="Ingresa con tu email y contrasena para comprar y ver tus ventas."
         >
           <LoginForm onSubmit={handleLogin} isLoading={loading} error={error} />
         </AuthCard>

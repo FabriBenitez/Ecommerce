@@ -7,6 +7,7 @@ using pruebaPagoMp.Services;
 using pruebaPagoMp.Models;
 using pruebaPagoMp.Security;
 using pruebaPagoMp.Services.Carritos;
+using pruebaPagoMp.Services.Retiros;
 
 
 using BCrypt.Net;
@@ -57,6 +58,7 @@ builder.Services.AddScoped<pruebaPagoMp.Services.Pagos.IMercadoPagoService, prue
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<pruebaPagoMp.Services.Ventas.IVentasService, pruebaPagoMp.Services.Ventas.VentasService>();
 
+builder.Services.AddScoped<IRetirosService, RetirosService>();
 
 
 
@@ -129,73 +131,62 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
-var hash = BCrypt.Net.BCrypt.HashPassword("123456");
-Console.WriteLine(hash);
-
-
-
-
-
-
-
-//Codigo Seed de Roles
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var hash = BCrypt.Net.BCrypt.HashPassword("123456");
+    Console.WriteLine(hash);
 
-    if (!context.Roles.Any())
+    // Codigo Seed de Roles
+    using (var scope = app.Services.CreateScope())
     {
-        context.Roles.AddRange(
-            new Rol { Nombre = "Cliente" },
-            new Rol { Nombre = "AdminVentas" },
-            new Rol { Nombre = "AdminCompras" },
-            new Rol { Nombre = "AdminGeneral" }
-        );
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        context.SaveChanges();
+        if (!context.Roles.Any())
+        {
+            context.Roles.AddRange(
+                new Rol { Nombre = "Cliente" },
+                new Rol { Nombre = "AdminVentas" },
+                new Rol { Nombre = "AdminCompras" },
+                new Rol { Nombre = "AdminGeneral" }
+            );
+
+            context.SaveChanges();
+        }
+    }
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        if (!context.Usuarios.Any(u => u.Email == "admin@admin.com"))
+        {
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+
+            var admin = new Usuario
+            {
+                Email = "admin@admin.com",
+                NombreCompleto = "Administrador General",
+                PasswordHash = passwordHash,
+                Activo = true,
+                FechaCreacion = DateTime.UtcNow,
+                DigitoVerificador = "INIT"
+            };
+
+            context.Usuarios.Add(admin);
+            context.SaveChanges();
+
+            var rolAdmin = context.Roles.First(r => r.Nombre == "AdminGeneral");
+
+            context.UsuarioRoles.Add(new UsuarioRol
+            {
+                UsuarioId = admin.Id,
+                RolId = rolAdmin.Id
+            });
+
+            context.SaveChanges();
+        }
     }
 }
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-    if (!context.Usuarios.Any(u => u.Email == "admin@admin.com"))
-    {
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
-
-        var admin = new Usuario
-        {
-            Email = "admin@admin.com",
-            NombreCompleto = "Administrador General",
-            PasswordHash = passwordHash,
-            Activo = true,
-            FechaCreacion = DateTime.UtcNow,
-            DigitoVerificador = "INIT"
-        };
-
-        context.Usuarios.Add(admin);
-        context.SaveChanges();
-
-        var rolAdmin = context.Roles.First(r => r.Nombre == "AdminGeneral");
-
-        context.UsuarioRoles.Add(new UsuarioRol
-        {
-            UsuarioId = admin.Id,
-            RolId = rolAdmin.Id
-        });
-
-        context.SaveChanges();
-    }
-}
-
-
-
-
-
-
-
 
 app.UseRouting();
 

@@ -22,6 +22,17 @@ function canalLabel(c) {
   return map[c] ?? String(c ?? "");
 }
 
+function medioPagoLabel(m) {
+  const map = {
+    1: "Efectivo",
+    2: "Debito",
+    3: "Credito",
+    4: "Transferencia",
+    5: "Nota de credito",
+  };
+  return map[m] ?? String(m ?? "");
+}
+
 export default function VentaDetalle() {
   const { id } = useParams();
   const [venta, setVenta] = useState(null);
@@ -66,7 +77,7 @@ export default function VentaDetalle() {
         <>
           <div className="ventaDetalleActions">
             <button className="printBtn" onClick={() => window.print()}>
-              Imprimir comprobante
+              Imprimir / Guardar PDF
             </button>
           </div>
           <section className="summaryCard">
@@ -123,6 +134,35 @@ export default function VentaDetalle() {
               <span>Total: </span>
               <span className="strong">{money.format(venta.total)}</span>
             </div>
+          </section>
+
+          <section className="itemsCard">
+            <h2 className="sectionTitle">Pagos</h2>
+
+            {(venta.pagos?.length ?? 0) === 0 ? (
+              <p className="state">Sin pagos registrados.</p>
+            ) : (
+              <div className="tableWrap">
+                <table className="itemsTable">
+                  <thead>
+                    <tr>
+                      <th>Medio</th>
+                      <th className="right">Monto</th>
+                      <th>Referencia</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {venta.pagos.map((p, idx) => (
+                      <tr key={idx}>
+                        <td>{medioPagoLabel(p.medioPago)}</td>
+                        <td className="right strong">{money.format(p.monto)}</td>
+                        <td>{p.referencia ?? "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           <section className="entregaCard">

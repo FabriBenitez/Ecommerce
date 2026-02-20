@@ -21,6 +21,8 @@ public class VentaDto
     public string? CodigoPostal { get; set; }
     public string? Observaciones { get; set; }
 
+    public EstadoRetiro EstadoRetiro { get; set; }
+
     public List<VentaDetalleDto> Detalles { get; set; } = new();
     public List<PagoItemDto> Pagos { get; set; } = new();
 }

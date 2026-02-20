@@ -33,6 +33,7 @@ public class Venta
     public string? MercadoPagoPaymentId { get; set; }
     public string? MercadoPagoEstado { get; set; }
 
+    public EstadoRetiro EstadoRetiro { get; set; } = EstadoRetiro.Pendiente;
     public ICollection<VentaPago> Pagos { get; set; } = new List<VentaPago>();
 }
 

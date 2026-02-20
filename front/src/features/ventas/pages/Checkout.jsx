@@ -24,7 +24,12 @@ export default function Checkout() {
       setResultado(data);
     } catch (e) {
       // si backend devuelve mensaje, lo mostramos
+      const validationErrors = e?.response?.data?.errors;
+      const validationMsg = validationErrors
+        ? Object.values(validationErrors).flat().join(" | ")
+        : null;
       const msg =
+        validationMsg ||
         e?.response?.data?.message ||
         e?.response?.data ||
         e?.message ||

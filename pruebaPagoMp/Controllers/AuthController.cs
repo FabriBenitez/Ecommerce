@@ -54,14 +54,18 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var email = dto.Email?.Trim();
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(dto.Password))
+            return Unauthorized("Credenciales invalidas");
 
         // 1. Buscar usuario
         var usuario = _context.Usuarios
-            .FirstOrDefault(u => u.Email == dto.Email && u.Activo);
+            .FirstOrDefault(u => u.Activo && u.Email.ToLower() == email.ToLower());
 
         if (usuario == null)
         {
-            _securityLogger.LoginFail(dto.Email, ip);
+            _securityLogger.LoginFail(email, ip);
             return Unauthorized("Credenciales invalidas");
         }
 
@@ -70,7 +74,7 @@ public class AuthController : ControllerBase
 
         if (!passwordOk)
         {
-            _securityLogger.LoginFail(dto.Email, ip);
+            _securityLogger.LoginFail(email, ip);
             return Unauthorized("Credenciales invalidas");
         }
 
