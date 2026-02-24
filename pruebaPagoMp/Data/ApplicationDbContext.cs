@@ -6,6 +6,7 @@ using pruebaPagoMp.Models.Interfaces;
 using pruebaPagoMp.Data.Configurations;
 using pruebaPagoMp.Models.Caja;
 using pruebaPagoMp.Models.Ventas;
+using pruebaPagoMp.Models.Compras;
 
 namespace pruebaPagoMp.Data;
 
@@ -36,6 +37,12 @@ public partial class ApplicationDbContext : DbContext
     public DbSet<VentaPago> VentaPagos => Set<VentaPago>();
     public DbSet<MovimientoCaja> MovimientosCaja => Set<MovimientoCaja>();
     public DbSet<NotaCredito> NotasCredito => Set<NotaCredito>();
+
+
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
+    public DbSet<Compra> Compras => Set<Compra>();
+    public DbSet<DetalleCompra> DetalleCompras => Set<DetalleCompra>();
+    public DbSet<FacturaProveedor> FacturasProveedor => Set<FacturaProveedor>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=DefaultConnection");
