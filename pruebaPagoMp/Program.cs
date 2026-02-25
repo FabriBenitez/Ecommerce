@@ -8,6 +8,8 @@ using pruebaPagoMp.Models;
 using pruebaPagoMp.Security;
 using pruebaPagoMp.Services.Carritos;
 using pruebaPagoMp.Services.Retiros;
+using pruebaPagoMp.Services.Ventas;
+using pruebaPagoMp.Services.Compras;
 
 
 using BCrypt.Net;
@@ -60,6 +62,7 @@ builder.Services.AddScoped<pruebaPagoMp.Services.Ventas.IVentasService, pruebaPa
 
 builder.Services.AddScoped<IRetirosService, RetirosService>();
 
+builder.Services.AddScoped<IComprasService, ComprasService>();
 
 
 // 🔐 AUTH + JWT

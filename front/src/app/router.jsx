@@ -6,13 +6,14 @@ import Comprobante from "@/features/ventas/pages/Comprobante";
 import Login from "@/features/auth/pages/Login";
 import Register from "@/features/auth/pages/Register";
 
-// Feature pages
+// Cliente
 import Catalogo from "@/features/productos/pages/Catalogo";
 import Carrito from "@/features/carrito/pages/Carrito";
 import Checkout from "@/features/ventas/pages/Checkout";
 import MisVentas from "@/features/ventas/pages/MisVentas";
 import VentaDetalle from "@/features/ventas/pages/VentaDetalle";
 
+// Guards
 import RequireAuth from "@/shared/auth/RequireAuth";
 import RequireRole from "@/shared/auth/RequireRole";
 
@@ -33,6 +34,17 @@ import HistorialFacturas from "@/features/adminVentas/pages/HistorialFacturas";
 import Devolucion from "@/features/adminVentas/pages/Devolucion";
 import AdminComprobante from "@/features/adminVentas/pages/Comprobante";
 
+// AdminCompras
+import ComprasShell from "@/features/adminCompras/components/ComprasShell";
+import ComprasDashboard from "@/features/adminCompras/pages/ComprasDashboard";
+import StockInventario from "@/features/adminCompras/pages/StockInventario";
+import Proveedores from "@/features/adminCompras/pages/Proveedores";
+import ProveedorDetalle from "@/features/adminCompras/pages/ProveedorDetalle";
+import NuevaCompra from "@/features/adminCompras/pages/NuevaCompra";
+import CompraDetalle from "@/features/adminCompras/pages/CompraDetalle";
+import SeguimientoPedidos from "@/features/adminCompras/pages/SeguimientoPedidos";
+import HistorialCompras from "@/features/adminCompras/pages/HistorialCompras";
+
 export const router = createBrowserRouter([
   {
     element: <AppLayout />,
@@ -42,15 +54,13 @@ export const router = createBrowserRouter([
       // Públicas
       { path: "/login", element: <Login /> },
       { path: "/registro", element: <Register /> },
-      {
-        path: "/recuperar",
-        element: <div style={{ padding: 20 }}>Recuperar password (pendiente)</div>,
-      },
+      { path: "/recuperar", element: <div style={{ padding: 20 }}>Recuperar password (pendiente)</div> },
 
-      // Privadas
+      // Privadas (TODO lo que requiera token acá adentro)
       {
         element: <RequireAuth />,
         children: [
+          // ✅ Cliente
           {
             element: <RequireRole role="Cliente" />,
             children: [
@@ -58,40 +68,64 @@ export const router = createBrowserRouter([
               { path: "/carrito", element: <Carrito /> },
               { path: "/checkout", element: <Checkout /> },
 
-              // Ventas
               { path: "/mis-ventas", element: <MisVentas /> },
               { path: "/ventas/:id", element: <VentaDetalle /> },
 
-              // back_urls / pantallas de resultado
               { path: "/pago/success", element: <PagoSuccess /> },
               { path: "/pago/pending", element: <PagoPending /> },
               { path: "/pago/failure", element: <PagoFailure /> },
               { path: "/pago/:resultado", element: <PagoResultado /> },
-              { path: "/comprobante/:id", element: <Comprobante /> }
-            ],
-          },
-        ],
-      },
-      {
-        element: <RequireRole role="AdminVentas" />,
-        children: [
-          {
-            element: <AdminShell />,
-            children: [
-              { path: "/admin", element: <AdminDashboard /> },
-              { path: "/admin/retiros", element: <PedidosRetiro /> },
-              { path: "/admin/retiros/:ventaId", element: <PedidoRetiroDetalle /> },
-              { path: "/admin/pos", element: <PosVenta /> },
-              { path: "/admin/pos/pago", element: <PosPago /> },
-              { path: "/admin/facturas", element: <HistorialFacturas /> },
-              { path: "/admin/facturas/:ventaId", element: <AdminComprobante /> },
-              { path: "/admin/devolucion/:ventaId", element: <Devolucion /> },
-            ],
-          },
-        ],
-      },
-      { path: "/sin-acceso", element: <div style={{ padding: 20 }}>No tenes acceso a este modulo.</div> },
 
+              { path: "/comprobante/:id", element: <Comprobante /> },
+            ],
+          },
+
+          // ✅ AdminVentas
+          {
+            element: <RequireRole role="AdminVentas" />,
+            children: [
+              {
+                element: <AdminShell />,
+                children: [
+                  { path: "/admin", element: <AdminDashboard /> },
+                  { path: "/admin/retiros", element: <PedidosRetiro /> },
+                  { path: "/admin/retiros/:ventaId", element: <PedidoRetiroDetalle /> },
+                  { path: "/admin/pos", element: <PosVenta /> },
+                  { path: "/admin/pos/pago", element: <PosPago /> },
+                  { path: "/admin/facturas", element: <HistorialFacturas /> },
+                  { path: "/admin/facturas/:ventaId", element: <AdminComprobante /> },
+                  { path: "/admin/devolucion/:ventaId", element: <Devolucion /> },
+                ],
+              },
+            ],
+          },
+
+          // ✅ AdminCompras
+          {
+            element: <RequireRole role="AdminCompras" />,
+            children: [
+              {
+                element: <ComprasShell />,
+                children: [
+                  { path: "/compras", element: <ComprasDashboard /> },
+                  { path: "/compras/inventario", element: <StockInventario /> },
+
+                  { path: "/compras/proveedores", element: <Proveedores /> },
+                  { path: "/compras/proveedores/:id", element: <ProveedorDetalle /> },
+
+                  { path: "/compras/nueva", element: <NuevaCompra /> },
+                  { path: "/compras/seguimiento", element: <SeguimientoPedidos /> },
+                  { path: "/compras/historial", element: <HistorialCompras /> },
+
+                  { path: "/compras/:id", element: <CompraDetalle /> },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+
+      { path: "/sin-acceso", element: <div style={{ padding: 20 }}>No tenes acceso a este modulo.</div> },
       { path: "*", element: <div style={{ padding: 20 }}>404</div> },
     ],
   },

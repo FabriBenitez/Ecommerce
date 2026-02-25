@@ -11,6 +11,7 @@ export default function RequireRole({ role }) {
   if (!hasRole(usuario, role)) {
     const roles = getUserRoles(usuario);
     if (roles.includes("AdminVentas")) return <Navigate to="/admin" replace />;
+    if (roles.includes("AdminCompras")) return <Navigate to="/compras" replace />;
     return <Navigate to="/sin-acceso" replace />;
   }
 

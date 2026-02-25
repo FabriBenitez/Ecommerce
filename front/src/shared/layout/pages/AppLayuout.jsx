@@ -3,11 +3,13 @@ import Navbar from "@/shared/layout/Navbar";
 
 export default function AppLayout() {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith("/admin");
+  const hideNavbar =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/compras");
 
   return (
     <>
-      {!isAdminRoute ? <Navbar /> : null}
+      {!hideNavbar ? <Navbar /> : null}
       <Outlet />
     </>
   );

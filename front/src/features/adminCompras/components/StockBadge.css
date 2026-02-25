@@ -1,0 +1,23 @@
+.sbadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid #e5e7eb;
+}
+
+.sbadge--low {
+  background: #fff1f2;
+  color: #be123c;
+  border-color: #fecdd3;
+}
+
+.sbadge--ok {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}

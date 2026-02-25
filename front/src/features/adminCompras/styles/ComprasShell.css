@@ -1,0 +1,18 @@
+.comprasShell{
+  min-height: 100vh;
+  background: #f6f7f9;
+}
+
+.comprasMain{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px;
+  padding-top: 22px; /* 👈 separa del navbar */
+}
+
+@media (max-width: 720px){
+  .comprasMain{
+    padding: 14px;
+    padding-top: 18px;
+  }
+}
