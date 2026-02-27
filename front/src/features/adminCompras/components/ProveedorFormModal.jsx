@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { notifyWarning } from "@/shared/ui/sweetAlert";
 
 const empty = {
   razonSocial: "",
@@ -31,8 +32,14 @@ export default function ProveedorFormModal({ open, onClose, initial, onSubmit })
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.razonSocial.trim()) return alert("Razón Social obligatoria.");
-    if (!form.cuit.trim()) return alert("CUIT obligatorio.");
+    if (!form.razonSocial.trim()) {
+      await notifyWarning("Dato requerido", "Razon social obligatoria.");
+      return;
+    }
+    if (!form.cuit.trim()) {
+      await notifyWarning("Dato requerido", "CUIT obligatorio.");
+      return;
+    }
 
     setSaving(true);
     try {

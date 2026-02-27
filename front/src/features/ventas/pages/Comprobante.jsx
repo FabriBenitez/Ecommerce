@@ -1,14 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ventaPorId } from "../api/ventas.api";
+import { obtenerDatosFactura } from "@/features/adminGeneral/api/adminGeneral.api";
 import "@/features/adminVentas/pages/Comprobante.css";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 const medioMap = { 1: "Efectivo", 2: "Debito", 3: "Credito", 4: "Transferencia", 5: "Nota credito" };
+const defaultDatosFactura = {
+  nombreComercial: "LIBRERIA X",
+  tituloComprobante: "Comprobante de venta",
+  direccion: "Calle Falsa 123 - CABA",
+  telefono: "+54 11 4567-8901",
+  email: "contacto@libreriax.com",
+  mensajeAgradecimiento: "Gracias por su compra en Libreria X",
+};
 
 export default function Comprobante() {
   const { id } = useParams();
   const [venta, setVenta] = useState(null);
+  const [datosFactura, setDatosFactura] = useState(defaultDatosFactura);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -22,6 +32,15 @@ export default function Comprobante() {
         const data = await ventaPorId(id);
         if (!alive) return;
         setVenta(data);
+
+        try {
+          const datos = await obtenerDatosFactura();
+          if (!alive) return;
+          setDatosFactura(datos ?? defaultDatosFactura);
+        } catch {
+          if (!alive) return;
+          setDatosFactura(defaultDatosFactura);
+        }
       } catch (e) {
         if (!alive) return;
         setErr(e?.message ?? "No se pudo cargar comprobante.");
@@ -51,11 +70,11 @@ export default function Comprobante() {
         <section className="compCard">
           <header className="compHeader">
             <div className="compBrand">
-              <div className="compLogo">LIBRERIA X</div>
-              <p>Comprobante de venta</p>
-              <p>Calle Falsa 123 - CABA</p>
-              <p>Tel: +54 11 4567-8901</p>
-              <p>Email: contacto@libreriax.com</p>
+              <div className="compLogo">{datosFactura.nombreComercial}</div>
+              <p>{datosFactura.tituloComprobante}</p>
+              <p>{datosFactura.direccion}</p>
+              <p>Tel: {datosFactura.telefono}</p>
+              <p>Email: {datosFactura.email}</p>
             </div>
 
             <div className="compMeta">
@@ -140,7 +159,7 @@ export default function Comprobante() {
             )}
           </div>
 
-          <p className="compThanks">Gracias por su compra en Libreria X</p>
+          <p className="compThanks">{datosFactura.mensajeAgradecimiento}</p>
         </section>
       ) : null}
     </div>

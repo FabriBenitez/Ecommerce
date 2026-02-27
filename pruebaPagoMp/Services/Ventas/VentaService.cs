@@ -524,7 +524,8 @@ public class VentasService : IVentasService
                 Fecha = v.Fecha,
                 Total = v.Total,
                 EstadoVenta = v.EstadoVenta,
-                Canal = v.Canal
+                Canal = v.Canal,
+                EstadoRetiro = v.EstadoRetiro
             })
             .ToListAsync();
     }

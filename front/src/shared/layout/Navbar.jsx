@@ -1,6 +1,7 @@
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/shared/auth/useAuth";
 import { hasRole } from "@/shared/auth/roles";
+import { confirmAction } from "@/shared/ui/sweetAlert";
 import "./Navbar.css";
 
 function cx(...classes) {
@@ -11,8 +12,18 @@ export default function Navbar() {
   const { usuario, logout, isAuth } = useAuth();
   const navigate = useNavigate();
   const isAdminVentas = hasRole(usuario, "AdminVentas");
+  const isAdminCompras = hasRole(usuario, "AdminCompras");
+  const isAdminGeneral = hasRole(usuario, "AdminGeneral");
+  const homeTo = isAdminGeneral ? "/admin-general" : isAdminCompras ? "/compras" : isAdminVentas ? "/admin" : "/catalogo";
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const confirmar = await confirmAction({
+      title: "Cerrar sesion",
+      text: "Vas a salir del sistema. Queres continuar?",
+      confirmText: "Si, salir",
+      cancelText: "No, seguir",
+    });
+    if (!confirmar) return;
     logout();
     navigate("/login");
   };
@@ -20,12 +31,12 @@ export default function Navbar() {
   return (
     <header className="nav">
       <div className="nav__inner">
-        <Link className="nav__brand" to={isAdminVentas ? "/admin" : "/catalogo"}>
+        <Link className="nav__brand" to={homeTo}>
           Libreria
         </Link>
 
         <nav className="nav__links" aria-label="Principal">
-          {!isAdminVentas ? (
+          {!isAdminVentas && !isAdminCompras && !isAdminGeneral ? (
             <NavLink
               to="/catalogo"
               className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
@@ -36,7 +47,21 @@ export default function Navbar() {
 
           {isAuth ? (
             <>
-              {isAdminVentas ? (
+              {isAdminGeneral ? (
+                <NavLink
+                  to="/admin-general"
+                  className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
+                >
+                  Admin General
+                </NavLink>
+              ) : isAdminCompras ? (
+                <NavLink
+                  to="/compras"
+                  className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
+                >
+                  Compras
+                </NavLink>
+              ) : isAdminVentas ? (
                 <>
                   <NavLink
                     to="/admin"
@@ -66,6 +91,12 @@ export default function Navbar() {
               ) : (
                 <>
                   <NavLink
+                    to="/promociones"
+                    className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
+                  >
+                    Promociones
+                  </NavLink>
+                  <NavLink
                     to="/carrito"
                     className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
                   >
@@ -77,6 +108,12 @@ export default function Navbar() {
                     className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
                   >
                     Mis compras
+                  </NavLink>
+                  <NavLink
+                    to="/mis-retiros"
+                    className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
+                  >
+                    Retiros
                   </NavLink>
                 </>
               )}

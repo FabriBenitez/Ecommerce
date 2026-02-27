@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { listarProveedores, listarProductos, crearCompra } from "../api/adminCompras.api";
 import CompraItemsTable from "../components/CompraItemsTable";
+import { notifyWarning } from "@/shared/ui/sweetAlert";
 
 export default function NuevaCompra() {
   const navigate = useNavigate();
@@ -63,14 +64,14 @@ export default function NuevaCompra() {
     return (items ?? []).reduce((acc, it) => acc + (it.cantidad * it.costoUnitario), 0);
   }, [items]);
 
-  function addItem() {
+  async function addItem() {
     const pid = Number(productoId);
     const qty = Number(cantidad);
     const cost = Number(costoUnitario);
 
-    if (!pid) return alert("Seleccioná un producto.");
-    if (qty <= 0) return alert("Cantidad inválida.");
-    if (cost < 0) return alert("Costo inválido.");
+    if (!pid) { await notifyWarning("Dato requerido", "Selecciona un producto."); return; }
+    if (qty <= 0) { await notifyWarning("Cantidad invalida", "Ingresa una cantidad mayor a 0."); return; }
+    if (cost < 0) { await notifyWarning("Costo invalido", "El costo no puede ser negativo."); return; }
 
     setItems((arr) => [...arr, { productoId: pid, cantidad: qty, costoUnitario: cost }]);
     setProductoId(0);
@@ -87,14 +88,14 @@ export default function NuevaCompra() {
   }
 
   async function submit() {
-    if (!proveedorId) return alert("Seleccioná un proveedor.");
-    if (!items.length) return alert("Agregá al menos un item.");
+    if (!proveedorId) { await notifyWarning("Dato requerido", "Selecciona un proveedor."); return; }
+    if (!items.length) { await notifyWarning("Items requeridos", "Agrega al menos un item."); return; }
 
     // validación rápida
     for (const it of items) {
-      if (!it.productoId) return alert("Hay items sin producto.");
-      if (it.cantidad <= 0) return alert("Hay items con cantidad inválida.");
-      if (it.costoUnitario < 0) return alert("Hay items con costo inválido.");
+      if (!it.productoId) { await notifyWarning("Items invalidos", "Hay items sin producto."); return; }
+      if (it.cantidad <= 0) { await notifyWarning("Items invalidos", "Hay items con cantidad invalida."); return; }
+      if (it.costoUnitario < 0) { await notifyWarning("Items invalidos", "Hay items con costo invalido."); return; }
     }
 
     setSaving(true);

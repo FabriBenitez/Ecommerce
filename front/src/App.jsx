@@ -3,6 +3,7 @@ import http from '@/shared/api/http';
 import ProductoCard from './components/ProductCard/ProductCard';
 import Carrito from './components/Carrito/Carrito';
 import { crearPreferenciaPago } from './api/pagoService';
+import { notifyError, notifyWarning } from "@/shared/ui/sweetAlert";
 import './App.css';
 
 function App() {
@@ -27,7 +28,7 @@ function App() {
 
   const manejarPago = async () => {
     if (carrito.length === 0) {
-      alert("El carrito está vacío");
+      await notifyWarning("Carrito vacio", "Agrega al menos un producto para pagar.");
       return;
     }
 
@@ -40,7 +41,7 @@ function App() {
       
     } catch (error) {
       console.error("Detalles del error:", error); // <-- Al usar la variable aquí, el aviso desaparece
-      alert("Hubo un error al procesar el pago. Intenta de nuevo.");
+      await notifyError("Error al procesar el pago", "Intenta de nuevo en unos segundos.");
     }
   };
 
@@ -64,3 +65,4 @@ function App() {
 }
 
 export default App;
+

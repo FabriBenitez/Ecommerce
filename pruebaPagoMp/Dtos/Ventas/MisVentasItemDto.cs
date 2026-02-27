@@ -9,4 +9,5 @@ public class MisVentasItemDto
     public decimal Total { get; set; }
     public EstadoVenta EstadoVenta { get; set; }
     public CanalVenta Canal { get; set; }
+    public EstadoRetiro EstadoRetiro { get; set; }
 }

@@ -25,6 +25,8 @@ export default function Login() {
         navigate("/admin");
       } else if (roles.includes("AdminCompras")) {
         navigate("/compras");
+      } else if (roles.includes("AdminGeneral")) {
+        navigate("/admin-general");
       } else if (roles.includes("Cliente")) {
         navigate("/catalogo");
       } else {

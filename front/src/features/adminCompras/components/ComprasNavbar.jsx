@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/shared/auth/useAuth";
+import { confirmAction } from "@/shared/ui/sweetAlert";
 import "../styles/ComprasNavbar.css";
 import "../styles/ComprasCommon.css";
 
@@ -15,7 +16,14 @@ export default function ComprasNavbar() {
 
   const email = useMemo(() => usuario?.email ?? "admin", [usuario]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const confirmar = await confirmAction({
+      title: "Cerrar sesion",
+      text: "Vas a salir del sistema. Queres continuar?",
+      confirmText: "Si, salir",
+      cancelText: "No, seguir",
+    });
+    if (!confirmar) return;
     setOpen(false);
     logout();
     navigate("/login");

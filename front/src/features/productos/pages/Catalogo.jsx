@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import productosApi from "../api/productos.api";
 import ProductCard from "../components/ProductCard";
 import "./Catalogo.css";
+import { notifyError, notifySuccess } from "@/shared/ui/sweetAlert";
 
 import carritosApi from "@/features/carrito/api/carrito.api"; // si todavía no existe te lo paso abajo
 
@@ -52,9 +53,9 @@ export default function Catalogo() {
     try {
       // Ajustá el DTO según tu backend: AgregarCarritoItemDto
       await carritosApi.agregarItem({ productoId, cantidad: 1 });
-      alert("Producto agregado al carrito ✅");
+      await notifySuccess("Producto agregado", "Se agrego al carrito correctamente.");
     } catch {
-      alert("No se pudo agregar al carrito.");
+      await notifyError("No se pudo agregar", "Intenta nuevamente en unos segundos.");
     }
   };
 
@@ -113,3 +114,4 @@ export default function Catalogo() {
     </main>
   );
 }
+

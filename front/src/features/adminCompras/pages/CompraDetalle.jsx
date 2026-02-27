@@ -8,6 +8,7 @@ import {
 } from "../api/adminCompras.api";
 import CompraItemsTable from "../components/CompraItemsTable";
 import "../styles/ComprasCommon.css";
+import { confirmAction, notifyWarning } from "@/shared/ui/sweetAlert";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 
@@ -93,7 +94,14 @@ export default function CompraDetalle() {
   }, [compra]);
 
   async function onConfirmar() {
-    if (!window.confirm("¿Confirmar compra? Esto debería aumentar stock y no ser editable.")) return;
+    const confirmar = await confirmAction({
+      title: "Confirmar compra",
+      text: "Se confirmara la compra y aumentara el stock. Esta accion no se puede deshacer.",
+      confirmText: "Si, confirmar",
+      cancelText: "No, cancelar",
+      icon: "warning",
+    });
+    if (!confirmar) return;
 
     setBusy(true);
     try {
@@ -111,9 +119,9 @@ export default function CompraDetalle() {
     e.preventDefault();
 
     const monto = Number(factMonto);
-    if (!factNumero.trim()) return alert("Ingresá número de factura.");
-    if (!factFecha) return alert("Ingresá fecha de factura.");
-    if (!Number.isFinite(monto) || monto <= 0) return alert("Monto inválido.");
+    if (!factNumero.trim()) { await notifyWarning("Dato requerido", "Ingresa numero de factura."); return; }
+    if (!factFecha) { await notifyWarning("Dato requerido", "Ingresa fecha de factura."); return; }
+    if (!Number.isFinite(monto) || monto <= 0) { await notifyWarning("Monto invalido", "Ingresa un monto mayor a 0."); return; }
 
     setBusy(true);
     try {
@@ -242,3 +250,4 @@ export default function CompraDetalle() {
     </main>
   );
 }
+

@@ -55,6 +55,9 @@ export default function MisVentas() {
       <header className="misVentasHeader">
         <h1 className="misVentasHeader__title">Mis compras</h1>
         <p className="misVentasHeader__subtitle">Historial de tus ventas web.</p>
+        <Link className="misVentasLink" to="/promociones">Ver promociones activas</Link>
+        <br />
+        <Link className="misVentasLink" to="/mis-retiros">Ver estado de retiro</Link>
       </header>
 
       {loading ? <p className="misVentasState">Cargando…</p> : null}

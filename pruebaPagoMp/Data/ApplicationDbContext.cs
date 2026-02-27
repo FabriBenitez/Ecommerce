@@ -7,6 +7,9 @@ using pruebaPagoMp.Data.Configurations;
 using pruebaPagoMp.Models.Caja;
 using pruebaPagoMp.Models.Ventas;
 using pruebaPagoMp.Models.Compras;
+using pruebaPagoMp.Models.Administracion;
+using pruebaPagoMp.Models.Bitacora;
+using pruebaPagoMp.Models.Promociones;
 
 namespace pruebaPagoMp.Data;
 
@@ -36,7 +39,11 @@ public partial class ApplicationDbContext : DbContext
 
     public DbSet<VentaPago> VentaPagos => Set<VentaPago>();
     public DbSet<MovimientoCaja> MovimientosCaja => Set<MovimientoCaja>();
+    public DbSet<Caja> Cajas => Set<Caja>();
     public DbSet<NotaCredito> NotasCredito => Set<NotaCredito>();
+    public DbSet<BitacoraEntry> BitacoraEntries => Set<BitacoraEntry>();
+    public DbSet<Promocion> Promociones => Set<Promocion>();
+    public DbSet<DatosFacturaEmpresa> DatosFacturaEmpresas => Set<DatosFacturaEmpresa>();
 
 
     public DbSet<Proveedor> Proveedores => Set<Proveedor>();
@@ -230,6 +237,22 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<pruebaPagoMp.Models.Caja.NotaCredito>()
             .Property(x => x.SaldoDisponible)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Caja.Caja>()
+            .Property(x => x.SaldoInicial)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Caja.Caja>()
+            .Property(x => x.SaldoFinal)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Promociones.Promocion>()
+            .Property(x => x.PorcentajeDescuento)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Promociones.Promocion>()
+            .Property(x => x.MontoDescuento)
             .HasColumnType("decimal(18,2)");
 
         base.OnModelCreating(modelBuilder);

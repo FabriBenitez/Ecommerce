@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/shared/auth/useAuth";
+import { confirmAction } from "@/shared/ui/sweetAlert";
 import "./AdminNavbar.css";
 
 function cx(...c) {
@@ -10,7 +11,14 @@ export default function AdminNavbar() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
 
-  const onLogout = () => {
+  const onLogout = async () => {
+    const confirmar = await confirmAction({
+      title: "Cerrar sesion",
+      text: "Vas a salir del sistema. Queres continuar?",
+      confirmText: "Si, salir",
+      cancelText: "No, seguir",
+    });
+    if (!confirmar) return;
     logout();
     navigate("/login");
   };

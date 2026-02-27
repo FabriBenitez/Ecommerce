@@ -63,6 +63,11 @@ builder.Services.AddScoped<pruebaPagoMp.Services.Ventas.IVentasService, pruebaPa
 builder.Services.AddScoped<IRetirosService, RetirosService>();
 
 builder.Services.AddScoped<IComprasService, ComprasService>();
+builder.Services.AddScoped<pruebaPagoMp.Services.Admin.Usuarios.IUsuariosAdminService, pruebaPagoMp.Services.Admin.Usuarios.UsuariosAdminService>();
+builder.Services.AddScoped<pruebaPagoMp.Services.Bitacora.IBitacoraService, pruebaPagoMp.Services.Bitacora.BitacoraService>();
+builder.Services.AddScoped<pruebaPagoMp.Services.Caja.ICajaService, pruebaPagoMp.Services.Caja.CajaService>();
+builder.Services.AddScoped<pruebaPagoMp.Services.Promociones.IPromocionService, pruebaPagoMp.Services.Promociones.PromocionService>();
+builder.Services.AddScoped<pruebaPagoMp.Services.Reportes.IReportesService, pruebaPagoMp.Services.Reportes.ReportesService>();
 
 
 // 🔐 AUTH + JWT
