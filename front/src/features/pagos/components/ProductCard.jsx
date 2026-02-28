@@ -17,6 +17,9 @@ export default function ProductCard({ producto, onAgregar }) {
         let payload = value.slice((lastHeader.index ?? 0) + prefix.length);
         payload = payload.replace(/["'\s]/g, "");
         payload = payload.replace(/[^A-Za-z0-9+/=]/g, "");
+        if (!payload) return "";
+        const mod = payload.length % 4;
+        if (mod !== 0) payload = payload + "=".repeat(4 - mod);
         value = `${prefix}${payload}`;
       }
     }

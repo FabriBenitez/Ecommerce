@@ -25,18 +25,14 @@ export async function crearProducto(payload) {
   form.append("precio", String(payload.precio ?? 0));
   form.append("stock", String(payload.stock ?? 0));
   if (payload.imagenFile) form.append("imagen", payload.imagenFile);
-  const { data } = await http.post("/api/productos", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const { data } = await http.post("/api/productos", form);
   return data;
 }
 
 export async function importarProductosCsv(file) {
   const form = new FormData();
   form.append("file", file);
-  const { data } = await http.post("/api/productos/import-csv", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const { data } = await http.post("/api/productos/import-csv", form);
   return data;
 }
 

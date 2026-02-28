@@ -4,6 +4,7 @@ using pruebaPagoMp.DTOs;
 using pruebaPagoMp.Models;
 using System.Globalization;
 using ClosedXML.Excel;
+using ClosedXML.Excel.Drawings;
 
 namespace pruebaPagoMp.Services
 {
@@ -169,6 +170,10 @@ namespace pruebaPagoMp.Services
                 var precioTxt = ws.Cell(r, 3).GetString().Trim().Replace(',', '.');
                 var stockTxt = ws.Cell(r, 4).GetString().Trim();
                 var imagenBase64 = ws.Cell(r, 5).GetString().Trim();
+                if (string.IsNullOrWhiteSpace(imagenBase64))
+                {
+                    imagenBase64 = ObtenerImagenBase64DesdeFila(ws, r) ?? string.Empty;
+                }
 
                 if (string.IsNullOrWhiteSpace(nombre)) continue;
                 if (!decimal.TryParse(precioTxt, NumberStyles.Any, CultureInfo.InvariantCulture, out var precio))
@@ -176,7 +181,7 @@ namespace pruebaPagoMp.Services
                 if (!int.TryParse(stockTxt, out var stock))
                     throw new InvalidOperationException($"Excel invalido en fila {r}. Stock incorrecto.");
                 if (string.IsNullOrWhiteSpace(imagenBase64))
-                    throw new InvalidOperationException($"Excel invalido en fila {r}. La imagenBase64 es obligatoria.");
+                    throw new InvalidOperationException($"Excel invalido en fila {r}. Debes informar imagenBase64 o insertar una imagen en la fila.");
 
                 rows.Add((nombre, string.IsNullOrWhiteSpace(descripcionRaw) ? null : descripcionRaw, precio, stock, imagenBase64));
             }
@@ -213,6 +218,43 @@ namespace pruebaPagoMp.Services
 
             const string pngPrefix = "data:image/png;base64,";
             return pngPrefix + value;
+        }
+
+        private static string? ObtenerImagenBase64DesdeFila(IXLWorksheet ws, int rowNumber)
+        {
+            var picture = ws.Pictures.FirstOrDefault(p =>
+                p.TopLeftCell?.Address.RowNumber == rowNumber
+                || (p.TopLeftCell?.Address.RowNumber <= rowNumber && p.BottomRightCell?.Address.RowNumber >= rowNumber));
+
+            if (picture?.ImageStream == null)
+                return null;
+
+            var stream = picture.ImageStream;
+            if (stream.CanSeek) stream.Position = 0;
+
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            if (ms.Length == 0) return null;
+
+            var mime = MimeDesdeFormato(picture.Format);
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            return $"data:{mime};base64,{base64}";
+        }
+
+        private static string MimeDesdeFormato(XLPictureFormat format)
+        {
+            return format.ToString().ToLowerInvariant() switch
+            {
+                "png" => "image/png",
+                "jpeg" => "image/jpeg",
+                "jpg" => "image/jpeg",
+                "gif" => "image/gif",
+                "bmp" => "image/bmp",
+                "tiff" => "image/tiff",
+                "icon" => "image/x-icon",
+                "webp" => "image/webp",
+                _ => "image/png"
+            };
         }
     }
 }

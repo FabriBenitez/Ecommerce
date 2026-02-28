@@ -96,7 +96,13 @@ export default function StockInventario() {
       setFile(null);
       await cargar();
     } catch (e) {
-      setError(e?.response?.data?.error ?? "No se pudo importar el archivo.");
+      const backendData = e?.response?.data;
+      const backendMessage = backendData?.error
+        ?? backendData?.title
+        ?? (typeof backendData === "string" ? backendData : null)
+        ?? "No se pudo importar el archivo.";
+      console.error("Error importacion productos:", backendData ?? e);
+      setError(backendMessage);
     }
   };
 
@@ -204,9 +210,15 @@ export default function StockInventario() {
       {error ? <section className="ccard ccard__pad cerror">{error}</section> : null}
 
       {!loading && !error ? (
-        <section className="ccard">
+        <section className="ccard ccard__pad stockTableSection">
+          <div className="stockTableHead">
+            <h3 className="stockTableHead__title">Listado de stock</h3>
+            <p className="stockTableHead__sub">
+              Estado visual por nivel de reposicion para facilitar lectura operativa.
+            </p>
+          </div>
           <div className="tableWrap">
-            <table className="ctable" style={{ minWidth: 820 }}>
+            <table className="ctable stockTable">
               <thead>
                 <tr>
                   <th>#</th>

@@ -8,4 +8,5 @@ public interface ICajaService
     Task<CajaResumenDto> CerrarAsync(CerrarCajaDto dto);
     Task<CajaResumenDto> ObtenerResumenAsync();
     Task<List<MovimientoCajaDto>> ListarMovimientosAsync(DateTime? desde, DateTime? hasta);
+    Task<List<CajaHistorialDiarioDto>> ListarHistorialDiarioAsync(int dias);
 }

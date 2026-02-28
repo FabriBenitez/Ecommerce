@@ -83,6 +83,36 @@
   font-size: 12px;
 }
 
+.stockTableSection {
+  margin-top: 6px;
+}
+
+.stockTableHead {
+  margin-bottom: 10px;
+}
+
+.stockTableHead__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.stockTableHead__sub {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.stockTable {
+  min-width: 820px;
+}
+
+.stockTable tbody td {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
 @media (max-width: 980px) {
   .stockForms {
     grid-template-columns: 1fr;

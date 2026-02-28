@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pruebaPagoMp.Data;
 using pruebaPagoMp.Models;
@@ -55,27 +56,54 @@ public class DigitoVerificadorService : IDigitoVerificadorService
         var dvhs = await ObtenerDVHsAsync(tabla);
         var dvv = CalcularDVH(tabla, string.Join("|", dvhs.OrderBy(x => x, StringComparer.Ordinal)));
 
-        var row = await _context.DigitosVerificadores.FirstOrDefaultAsync(x => x.Tabla == tabla);
-        if (row == null)
+        try
         {
-            _context.DigitosVerificadores.Add(new DigitoVerificador { Tabla = tabla, Valor = dvv });
-        }
-        else
-        {
-            row.Valor = dvv;
-        }
+            var row = await _context.DigitosVerificadores.FirstOrDefaultAsync(x => x.Tabla == tabla);
+            if (row == null)
+            {
+                _context.DigitosVerificadores.Add(new DigitoVerificador { Tabla = tabla, Valor = dvv });
+            }
+            else
+            {
+                row.Valor = dvv;
+            }
 
-        await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+        }
+        catch (SqlException ex) when (ex.Number == 208)
+        {
+            await EnsureDigitosVerificadoresTableAsync();
+
+            var row = await _context.DigitosVerificadores.FirstOrDefaultAsync(x => x.Tabla == tabla);
+            if (row == null)
+            {
+                _context.DigitosVerificadores.Add(new DigitoVerificador { Tabla = tabla, Valor = dvv });
+            }
+            else
+            {
+                row.Valor = dvv;
+            }
+
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task<bool> VerificarTablaAsync(string tabla)
     {
-        var row = await _context.DigitosVerificadores.AsNoTracking().FirstOrDefaultAsync(x => x.Tabla == tabla);
-        if (row == null) return false;
+        try
+        {
+            var row = await _context.DigitosVerificadores.AsNoTracking().FirstOrDefaultAsync(x => x.Tabla == tabla);
+            if (row == null) return false;
 
-        var dvhs = await ObtenerDVHsAsync(tabla);
-        var calculado = CalcularDVH(tabla, string.Join("|", dvhs.OrderBy(x => x, StringComparer.Ordinal)));
-        return string.Equals(row.Valor, calculado, StringComparison.OrdinalIgnoreCase);
+            var dvhs = await ObtenerDVHsAsync(tabla);
+            var calculado = CalcularDVH(tabla, string.Join("|", dvhs.OrderBy(x => x, StringComparer.Ordinal)));
+            return string.Equals(row.Valor, calculado, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (SqlException ex) when (ex.Number == 208)
+        {
+            await EnsureDigitosVerificadoresTableAsync();
+            return false;
+        }
     }
 
     public async Task<bool> VerificarTodoAsync()
@@ -100,6 +128,21 @@ public class DigitoVerificadorService : IDigitoVerificadorService
             "MovimientosCaja" => await _context.MovimientosCaja.AsNoTracking().Select(x => x.DigitoVerificador).Where(x => !string.IsNullOrWhiteSpace(x)).ToListAsync(),
             _ => throw new InvalidOperationException($"Tabla DVV no soportada: {tabla}.")
         };
+    }
+
+    private async Task EnsureDigitosVerificadoresTableAsync()
+    {
+        await _context.Database.ExecuteSqlRawAsync(@"
+IF OBJECT_ID(N'[DigitosVerificadores]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [DigitosVerificadores]
+    (
+        [Tabla] nvarchar(450) NOT NULL,
+        [Valor] nvarchar(max) NOT NULL,
+        CONSTRAINT [PK_DigitosVerificadores] PRIMARY KEY ([Tabla])
+    );
+END
+");
     }
 
     private static string Normalize(object? value)

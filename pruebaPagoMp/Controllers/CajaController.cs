@@ -74,4 +74,10 @@ public class CajaController : ControllerBase
     {
         return Ok(await _service.ListarMovimientosAsync(desde, hasta));
     }
+
+    [HttpGet("historial-diario")]
+    public async Task<IActionResult> HistorialDiario([FromQuery] int dias = 30)
+    {
+        return Ok(await _service.ListarHistorialDiarioAsync(dias));
+    }
 }

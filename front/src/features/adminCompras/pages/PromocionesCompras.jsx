@@ -8,6 +8,7 @@ import {
   listarPromociones,
 } from "../api/adminCompras.api";
 import "../styles/ComprasCommon.css";
+import "./PromocionesCompras.css";
 
 const GENERO_PALABRAS_CLAVE = [
   ["ciencia ficcion", "Ciencia ficcion"],
@@ -203,32 +204,48 @@ export default function PromocionesCompras() {
       </section>
 
       <section className="ccard ccard__pad">
-        <h3>Promociones cargadas</h3>
-        {(items ?? []).map((item) => (
-          <div className="agItem" key={item.id}>
-            <div>
-              <strong>{item.nombre}</strong>
-              <p className="cmuted">
-                {item.productoNombre ? `Libro: ${item.productoNombre}` : ""} {item.genero ? `Genero: ${item.genero}` : ""}
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn--ghost btn--sm" onClick={() => desactivarPromocion(item.id).then(cargar)}>
-                Quitar
-              </button>
-              {item.productoId ? (
-                <button className="btn btn--ghost btn--sm" onClick={() => desactivarPromocionPorProducto(item.productoId).then(cargar)}>
-                  Quitar por libro
-                </button>
-              ) : null}
-              {item.genero ? (
-                <button className="btn btn--ghost btn--sm" onClick={() => desactivarPromocionPorGenero(item.genero).then(cargar)}>
-                  Quitar por genero
-                </button>
-              ) : null}
-            </div>
+        <div className="promoLoadedHead">
+          <h3 className="promoLoadedTitle">Promociones cargadas</h3>
+          <span className="promoLoadedCount">{(items ?? []).length} activas</span>
+        </div>
+
+        {(items ?? []).length === 0 ? (
+          <div className="promoEmpty">
+            <strong>No hay promociones activas.</strong>
+            <p>Crea una promocion por libro o genero desde el formulario superior.</p>
           </div>
-        ))}
+        ) : (
+          <div className="promoLoadedGrid">
+            {(items ?? []).map((item) => (
+              <article className="promoCard" key={item.id}>
+                <div className="promoCard__top">
+                  <h4 className="promoCard__name">{item.nombre}</h4>
+                </div>
+
+                <div className="promoCard__meta">
+                  {item.productoNombre ? <span className="promoPill">Libro: {item.productoNombre}</span> : null}
+                  {item.genero ? <span className="promoPill promoPill--alt">Genero: {item.genero}</span> : null}
+                </div>
+
+                <div className="promoCard__actions">
+                  <button className="btn btn--ghost btn--sm" onClick={() => desactivarPromocion(item.id).then(cargar)}>
+                    Quitar
+                  </button>
+                  {item.productoId ? (
+                    <button className="btn btn--ghost btn--sm" onClick={() => desactivarPromocionPorProducto(item.productoId).then(cargar)}>
+                      Quitar por libro
+                    </button>
+                  ) : null}
+                  {item.genero ? (
+                    <button className="btn btn--ghost btn--sm" onClick={() => desactivarPromocionPorGenero(item.genero).then(cargar)}>
+                      Quitar por genero
+                    </button>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

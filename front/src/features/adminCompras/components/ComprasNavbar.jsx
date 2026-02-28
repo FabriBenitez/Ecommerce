@@ -35,7 +35,7 @@ export default function ComprasNavbar() {
   return (
     <header className="cnav">
       <div className="cnav__inner">
-        <div className="cnav__left">
+        <div className="cnav__top">
           <button
             className="cnav__burger"
             type="button"
@@ -46,10 +46,25 @@ export default function ComprasNavbar() {
             {"\u2630"}
           </button>
 
-          <NavLink to="/compras" className="cnav__brand">
-            AdminCompras
-          </NavLink>
+          <div className="cnav__brandWrap">
+            <NavLink to="/compras" className="cnav__brand">
+              AdminCompras
+            </NavLink>
+            <span className="cnav__roleTag">Abastecimiento</span>
+          </div>
 
+          <div className="cnav__right">
+            <span className="cnav__user" title={email}>
+              {email}
+            </span>
+
+            <button className="cbtn cbtn--primary cnav__logoutTop" onClick={handleLogout}>
+              Cerrar sesion
+            </button>
+          </div>
+        </div>
+
+        <div className="cnav__linksRow">
           <nav className="cnav__links" aria-label="Navegacion Admin Compras">
             <NavLink to="/compras" className={linkClass} end>
               Dashboard
@@ -70,26 +85,6 @@ export default function ComprasNavbar() {
               Historial
             </NavLink>
           </nav>
-        </div>
-
-        <div className="cnav__right">
-          <div className="cnav__searchWrap">
-            <input
-              className="cnav__search"
-              placeholder="Buscar productos, ordenes..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") e.currentTarget.blur();
-              }}
-            />
-          </div>
-
-          <span className="cnav__user" title={email}>
-            {email}
-          </span>
-
-          <button className="cbtn cbtn--primary cnav__logoutTop" onClick={handleLogout}>
-            Logout
-          </button>
         </div>
       </div>
 

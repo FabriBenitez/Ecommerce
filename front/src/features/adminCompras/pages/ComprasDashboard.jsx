@@ -32,8 +32,8 @@ export default function ComprasDashboard() {
       } catch (e) {
         if (!alive) return;
         const status = e?.response?.status;
-        if (status === 401) setError("Sesión expirada o no autenticada. Volvé a iniciar sesión.");
-        else if (status === 403) setError("No tenés permisos para ver este dashboard.");
+        if (status === 401) setError("Sesion expirada o no autenticada. Volve a iniciar sesion.");
+        else if (status === 403) setError("No tenes permisos para ver este dashboard.");
         else if (status === 404) setError("Endpoint de dashboard no encontrado en backend.");
         else setError(e?.response?.data?.error ?? e?.message ?? "No se pudo cargar el dashboard.");
       } finally {
@@ -41,70 +41,55 @@ export default function ComprasDashboard() {
       }
     })();
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
   return (
-    <div className="cgrid" style={{ gap: 14 }}>
-      <header className="ccard ccard__pad">
+    <div className="cDash">
+      <header className="ccard ccard__pad cDashHero">
         <h1 className="ctitle">Dashboard Operativo</h1>
         <p className="cmuted" style={{ marginTop: 6 }}>
-          Gestión centralizada de stock y abastecimiento.
+          Gestion centralizada de stock y abastecimiento.
         </p>
       </header>
 
-      {loading ? <div className="ccard ccard__pad">Cargando…</div> : null}
+      {loading ? <div className="ccard ccard__pad">Cargando...</div> : null}
       {error ? <div className="ccard ccard__pad" style={{ color: "#b00020" }}>{error}</div> : null}
 
       {!loading && !error && data ? (
         <>
-          <section className="cgrid cgrid--3">
-            <div className="ccard ccard__pad">
-              <div className="cmuted">Productos con stock bajo</div>
-              <div style={{ fontSize: 28, fontWeight: 900, marginTop: 6 }}>
-                {data.stockBajoCount}
-              </div>
-              <div className="cmuted" style={{ marginTop: 6 }}>
-                Stock &lt; {data.stockMinimo}
-              </div>
-            </div>
+          <section className="cDashTiles">
+            <article className="ccard ccard__pad cTile cTile--accent">
+              <div className="cTile__label">Productos con stock bajo</div>
+              <div className="cTile__value">{data.stockBajoCount}</div>
+              <div className="cTile__meta">Stock &lt; {data.stockMinimo}</div>
+            </article>
 
-            <div className="ccard ccard__pad">
-              <div className="cmuted">Compras pendientes</div>
-              <div style={{ fontSize: 28, fontWeight: 900, marginTop: 6 }}>
-                {data.comprasPendientesCount}
-              </div>
-              <div className="cmuted" style={{ marginTop: 6 }}>
-                En espera de confirmación
-              </div>
-            </div>
+            <article className="ccard ccard__pad cTile">
+              <div className="cTile__label">Compras pendientes</div>
+              <div className="cTile__value">{data.comprasPendientesCount}</div>
+              <div className="cTile__meta">En espera de confirmacion</div>
+            </article>
 
-            <div className="ccard ccard__pad">
-              <div className="cmuted">Atajos</div>
-              <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-                <a className="cbtn cbtn--ghost" href="/compras/inventario" style={{ textDecoration: "none" }}>
-                  Inventario
-                </a>
-                <a className="cbtn cbtn--ghost" href="/compras/proveedores" style={{ textDecoration: "none" }}>
-                  Proveedores
-                </a>
-                <a className="cbtn cbtn--primary" href="/compras/seguimiento" style={{ textDecoration: "none" }}>
-                  Compras
-                </a>
-              </div>
-            </div>
+            <article className="ccard ccard__pad cTile">
+              <div className="cTile__label">Stock minimo</div>
+              <div className="cTile__value">{data.stockMinimo}</div>
+              <div className="cTile__meta">Parametro operativo vigente</div>
+            </article>
           </section>
 
           <section className="ccard ccard__pad">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-              <h2 className="sectionTitle" style={{ margin: 0 }}>Últimas 5 Compras Confirmadas</h2>
+              <h2 className="sectionTitle" style={{ margin: 0 }}>Ultimas 5 Compras Confirmadas</h2>
               <a className="cbtn cbtn--ghost" href="/compras/historial" style={{ textDecoration: "none" }}>
                 Ver todas
               </a>
             </div>
 
             <div className="tableWrap" style={{ marginTop: 12 }}>
-              <table className="itemsTable">
+              <table className="ctable">
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -133,4 +118,3 @@ export default function ComprasDashboard() {
     </div>
   );
 }
-

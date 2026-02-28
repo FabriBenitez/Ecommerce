@@ -55,6 +55,11 @@ export async function movimientosCaja(params) {
   return data ?? [];
 }
 
+export async function historialCajaDiaria(params) {
+  const { data } = await http.get("/api/caja/historial-diario", { params });
+  return data ?? [];
+}
+
 export async function abrirCaja(payload) {
   const { data } = await http.post("/api/caja/abrir", payload);
   return data;

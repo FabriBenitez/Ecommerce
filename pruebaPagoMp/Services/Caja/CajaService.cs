@@ -104,6 +104,21 @@ public class CajaService : ICajaService
             };
         }
 
+        if (!caja.Abierta)
+        {
+            return new CajaResumenDto
+            {
+                CajaId = caja.Id,
+                Abierta = false,
+                SaldoInicial = 0m,
+                Ingresos = 0m,
+                Egresos = 0m,
+                SaldoActual = 0m,
+                FechaApertura = caja.FechaApertura,
+                FechaCierre = caja.FechaCierre
+            };
+        }
+
         var inicio = caja.FechaApertura;
         var fin = caja.FechaCierre ?? DateTime.UtcNow;
 
@@ -148,5 +163,73 @@ public class CajaService : ICajaService
                 Referencia = m.Referencia
             })
             .ToListAsync();
+    }
+
+    public async Task<List<CajaHistorialDiarioDto>> ListarHistorialDiarioAsync(int dias)
+    {
+        var diasNormalizados = Math.Clamp(dias, 1, 365);
+        var desde = DateTime.UtcNow.Date.AddDays(-(diasNormalizados - 1));
+
+        var cajas = await _context.Cajas
+            .AsNoTracking()
+            .Where(c => c.FechaApertura >= desde)
+            .OrderByDescending(c => c.FechaApertura)
+            .ToListAsync();
+
+        if (cajas.Count == 0) return new List<CajaHistorialDiarioDto>();
+
+        var inicioRango = cajas.Min(c => c.FechaApertura);
+        var finRango = cajas.Max(c => c.FechaCierre ?? DateTime.UtcNow);
+
+        var movimientos = await _context.MovimientosCaja
+            .AsNoTracking()
+            .Where(m => m.Fecha >= inicioRango && m.Fecha <= finRango)
+            .Select(m => new { m.Fecha, m.Tipo, m.Monto })
+            .ToListAsync();
+
+        var ahora = DateTime.UtcNow;
+        var resultado = new List<CajaHistorialDiarioDto>(cajas.Count);
+
+        foreach (var caja in cajas)
+        {
+            var finCaja = caja.FechaCierre ?? ahora;
+            var movimientosCaja = movimientos
+                .Where(m => m.Fecha >= caja.FechaApertura && m.Fecha <= finCaja)
+                .ToList();
+
+            var ingresos = movimientosCaja
+                .Where(m => m.Tipo == TipoMovimientoCaja.Ingreso)
+                .Sum(m => m.Monto);
+
+            var egresos = movimientosCaja
+                .Where(m => m.Tipo == TipoMovimientoCaja.Egreso)
+                .Sum(m => m.Monto);
+
+            var saldoEsperado = decimal.Round(caja.SaldoInicial + ingresos - egresos, 2);
+            decimal? diferenciaCierre = null;
+
+            if (caja.SaldoFinal.HasValue)
+            {
+                diferenciaCierre = decimal.Round(caja.SaldoFinal.Value - saldoEsperado, 2);
+            }
+
+            resultado.Add(new CajaHistorialDiarioDto
+            {
+                CajaId = caja.Id,
+                Fecha = caja.FechaApertura.Date,
+                FechaApertura = caja.FechaApertura,
+                FechaCierre = caja.FechaCierre,
+                Abierta = caja.Abierta,
+                SaldoInicial = caja.SaldoInicial,
+                Ingresos = ingresos,
+                Egresos = egresos,
+                SaldoEsperado = saldoEsperado,
+                SaldoFinal = caja.SaldoFinal,
+                DiferenciaCierre = diferenciaCierre,
+                CantidadMovimientos = movimientosCaja.Count
+            });
+        }
+
+        return resultado;
     }
 }
