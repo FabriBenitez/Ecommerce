@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using pruebaPagoMp.Data;
 using pruebaPagoMp.Dtos.Ventas;
+using pruebaPagoMp.Models.Bitacora;
 using pruebaPagoMp.Models.Ventas.Enums;
+using pruebaPagoMp.Services.Bitacora;
 using pruebaPagoMp.Services.Ventas;
 
 namespace pruebaPagoMp.Controllers;
@@ -15,11 +17,13 @@ public class VentasPresencialesController : ControllerBase
 {
     private readonly IVentasService _ventasService;
     private readonly ApplicationDbContext _context;
+    private readonly IBitacoraService _bitacoraService;
 
-    public VentasPresencialesController(IVentasService ventasService, ApplicationDbContext context)
+    public VentasPresencialesController(IVentasService ventasService, ApplicationDbContext context, IBitacoraService bitacoraService)
     {
         _ventasService = ventasService;
         _context = context;
+        _bitacoraService = bitacoraService;
     }
 
     [HttpPost]
@@ -40,6 +44,14 @@ public class VentasPresencialesController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
+            await _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                UsuarioId = adminUsuarioId,
+                Accion = "VENTA_PRESENCIAL_CREAR",
+                Detalle = ex.Message,
+                Ip = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Resultado = "ERROR"
+            });
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -60,8 +72,22 @@ public class VentasPresencialesController : ControllerBase
     [Authorize(Roles = "AdminVentas")]
     public async Task<IActionResult> Devolucion([FromRoute] int ventaId, [FromBody] DevolucionPresencialDto dto)
     {
-        var notaCreditoId = await _ventasService.RegistrarDevolucionPresencialAsync(ventaId, dto);
-        return Ok(new { notaCreditoId });
+        try
+        {
+            var notaCreditoId = await _ventasService.RegistrarDevolucionPresencialAsync(ventaId, dto);
+            return Ok(new { notaCreditoId });
+        }
+        catch (Exception ex)
+        {
+            await _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                Accion = "VENTA_DEVOLUCION",
+                Detalle = ex.Message,
+                Ip = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Resultado = "ERROR"
+            });
+            return BadRequest(new { error = ex.Message });
+        }
     }
     [HttpGet("/api/notas-credito/{dni}")]
     [Authorize(Roles="AdminVentas")]

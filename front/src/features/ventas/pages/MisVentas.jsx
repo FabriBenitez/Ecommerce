@@ -22,6 +22,15 @@ function canalLabel(c) {
   return map[c] ?? String(c ?? "");
 }
 
+function retiroLabel(r) {
+  const map = {
+    1: "Pendiente",
+    2: "Preparando",
+    3: "Listo para retirar",
+    4: "Entregado",
+  };
+  return map[r] ?? String(r ?? "");
+}
 
 
 export default function MisVentas() {
@@ -53,8 +62,8 @@ export default function MisVentas() {
   return (
     <main className="misVentasPage">
       <header className="misVentasHeader">
-        <h1 className="misVentasHeader__title">Mis compras</h1>
-        <p className="misVentasHeader__subtitle">Historial de tus ventas web.</p>
+        <h1 className="misVentasHeader__title">Seguimiento de mis compras</h1>
+        <p className="misVentasHeader__subtitle">Ves cada compra y el estado actual de retiro.</p>
         <Link className="misVentasLink" to="/promociones">Ver promociones activas</Link>
         <br />
         <Link className="misVentasLink" to="/mis-retiros">Ver estado de retiro</Link>
@@ -79,6 +88,7 @@ export default function MisVentas() {
                     <th>Fecha</th>
                     <th>Total</th>
                     <th>Estado</th>
+                    <th>Retiro</th>
                     <th>Canal</th>
                     <th></th>
                   </tr>
@@ -90,6 +100,7 @@ export default function MisVentas() {
                       <td>{new Date(v.fecha).toLocaleString("es-AR")}</td>
                       <td className="money">{money.format(v.total)}</td>
                       <td>{estadoLabel(v.estadoVenta)}</td>
+                      <td>{retiroLabel(v.estadoRetiro)}</td>
                       <td>{canalLabel(v.canal)}</td>
                       <td className="right">
                         <Link className="btnLink" to={`/ventas/${v.id}`}>

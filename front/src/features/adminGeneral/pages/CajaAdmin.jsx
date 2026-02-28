@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { abrirCaja, cerrarCaja, movimientosCaja, resumenCaja } from "../api/adminGeneral.api";
+import { abrirCaja, cerrarCaja, movimientosCaja, reporteCaja, reporteVentas, resumenCaja } from "../api/adminGeneral.api";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 
@@ -9,11 +9,25 @@ export default function CajaAdmin() {
   const [monto, setMonto] = useState("");
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
+  const [diario, setDiario] = useState(null);
+  const [ventasDia, setVentasDia] = useState(null);
 
   const cargar = async () => {
-    const [r, m] = await Promise.all([resumenCaja(), movimientosCaja()]);
+    const hoy = new Date();
+    const iso = hoy.toISOString().slice(0, 10);
+    const desde = `${iso}T00:00:00`;
+    const hasta = `${iso}T23:59:59`;
+
+    const [r, m, c, v] = await Promise.all([
+      resumenCaja(),
+      movimientosCaja({ desde, hasta }),
+      reporteCaja({ fecha: iso }),
+      reporteVentas({ desde, hasta }),
+    ]);
     setResumen(r);
     setMovimientos(m);
+    setDiario(c);
+    setVentasDia(v);
   };
 
   useEffect(() => {
@@ -111,9 +125,10 @@ export default function CajaAdmin() {
         <article className="agCard agCard--soft">
           <h3>Resumen Diario</h3>
           <div className="agList">
+            <div className="agItem"><div className="agItem__icon">V</div><div><h4>Ventas del dia</h4></div><div className="agItem__value">{ventasDia?.cantidadVentas ?? 0}</div></div>
             <div className="agItem"><div className="agItem__icon">$</div><div><h4>Total Ingresos</h4></div><div className="agItem__value">{money.format(resumen?.ingresos ?? 0)}</div></div>
             <div className="agItem"><div className="agItem__icon">-</div><div><h4>Total Egresos</h4></div><div className="agItem__value">{money.format(resumen?.egresos ?? 0)}</div></div>
-            <div className="agItem"><div className="agItem__icon">=</div><div><h4>Neto del Dia</h4></div><div className="agItem__value">{money.format((resumen?.ingresos ?? 0) - (resumen?.egresos ?? 0))}</div></div>
+            <div className="agItem"><div className="agItem__icon">=</div><div><h4>Neto del dia</h4></div><div className="agItem__value">{money.format(diario?.saldoNeto ?? ((resumen?.ingresos ?? 0) - (resumen?.egresos ?? 0)))}</div></div>
           </div>
           <div className="agHint" style={{ marginTop: 12 }}>
             No olvides realizar el arqueo de caja fisico antes del cierre formal.

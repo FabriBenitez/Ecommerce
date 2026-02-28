@@ -25,6 +25,21 @@ export async function crearPromocion(payload) {
   return data;
 }
 
+export async function desactivarPromocion(id) {
+  const { data } = await http.delete(`/api/promociones/${id}`);
+  return data;
+}
+
+export async function desactivarPromocionPorProducto(productoId) {
+  const { data } = await http.delete(`/api/promociones/by-producto/${productoId}`);
+  return data;
+}
+
+export async function desactivarPromocionPorGenero(genero) {
+  const { data } = await http.delete("/api/promociones/by-genero", { params: { genero } });
+  return data;
+}
+
 export async function listarProductosAdmin() {
   const { data } = await http.get("/api/productos");
   return data ?? [];
@@ -88,4 +103,19 @@ export async function cambiarActivoUsuario(id, activo) {
 export async function actualizarUsuarioInterno(id, payload) {
   const { data } = await http.put(`/api/admin-general/usuarios/${id}`, payload);
   return data ?? null;
+}
+
+export async function cambiarPasswordUsuarioAdmin(id, nuevaPassword) {
+  const { data } = await http.put(`/api/admin-general/usuarios/${id}/password`, { nuevaPassword });
+  return data;
+}
+
+export async function obtenerStockMinimo() {
+  const { data } = await http.get("/api/configuracion/stock-minimo");
+  return Number(data?.stockMinimo ?? 10);
+}
+
+export async function actualizarStockMinimo(stockMinimo) {
+  const { data } = await http.put("/api/configuracion/stock-minimo", { stockMinimo });
+  return data;
 }

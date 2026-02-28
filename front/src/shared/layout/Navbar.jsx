@@ -91,12 +91,6 @@ export default function Navbar() {
               ) : (
                 <>
                   <NavLink
-                    to="/promociones"
-                    className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
-                  >
-                    Promociones
-                  </NavLink>
-                  <NavLink
                     to="/carrito"
                     className={({ isActive }) => cx("nav__link", isActive && "nav__link--active")}
                   >

@@ -9,7 +9,6 @@ function cx(...c) {
 export default function AdminGeneralNavbar() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
-  const initial = (usuario?.email ?? "A").slice(0, 1).toUpperCase();
 
   const onLogout = async () => {
     const confirmar = await confirmAction({
@@ -35,7 +34,6 @@ export default function AdminGeneralNavbar() {
         </div>
         <nav className="agNav__links" aria-label="Admin General">
           <NavLink to="/admin-general" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Dashboard</NavLink>
-          <NavLink to="/admin-general/promociones" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Promociones</NavLink>
           <NavLink to="/admin-general/caja" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Caja</NavLink>
           <NavLink to="/admin-general/usuarios" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Usuarios</NavLink>
           <NavLink to="/admin-general/reportes" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Reportes</NavLink>
@@ -45,7 +43,6 @@ export default function AdminGeneralNavbar() {
           <button className="agNav__logout" type="button" onClick={onLogout}>
             Salir
           </button>
-          <div className="agNav__avatar" title={usuario?.email ?? ""}>{initial}</div>
         </div>
       </div>
     </header>

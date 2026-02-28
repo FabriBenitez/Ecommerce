@@ -20,4 +20,5 @@ public class MovimientoCaja
 
     public MedioPago MedioPago { get; set; }
     public string? Referencia { get; set; }
+    public string DigitoVerificador { get; set; } = "";
 }

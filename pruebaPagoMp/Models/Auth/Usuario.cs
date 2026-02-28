@@ -12,6 +12,7 @@ public class Usuario
     public string NombreCompleto { get; set; } = null!;
     public string? Telefono { get; set; }
     public string? Dni { get; set; }
+    public string? DniHash { get; set; }
 
     // Seguridad
     public string PasswordHash { get; set; } = null!;

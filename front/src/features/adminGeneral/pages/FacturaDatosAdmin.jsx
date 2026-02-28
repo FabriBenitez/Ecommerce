@@ -78,39 +78,47 @@ export default function FacturaDatosAdmin() {
   return (
     <>
       <section className="agPageHead">
-        <h1>Configuracion Global de Comprobantes</h1>
-        <p>Gestiona datos legales y de contacto visibles en todas las facturas y recibos.</p>
+        <h1>Datos globales de factura</h1>
+        <p>Configura la informacion legal y comercial que se imprime en comprobantes.</p>
       </section>
 
-      <section className="agSection agSidebarLayout">
-        <div style={{ maxWidth: 920 }}>
-          <article className="agCard">
-            <h3>Datos de Facturacion</h3>
-            <form className="agForm" onSubmit={onSubmit}>
-              <div className="agFormRow">
-                <label>Razon social<input name="nombreComercial" value={form.nombreComercial} onChange={onChange} /></label>
-                <label>Titulo comprobante<input name="tituloComprobante" value={form.tituloComprobante} onChange={onChange} /></label>
-              </div>
-              <label>Direccion legal<input name="direccion" value={form.direccion} onChange={onChange} /></label>
-              <div className="agFormRow">
-                <label>Telefono de contacto<input name="telefono" value={form.telefono} onChange={onChange} /></label>
-                <label>Email administrativo<input name="email" value={form.email} onChange={onChange} /></label>
-              </div>
-              <label>Pie de comprobante / mensaje final
-                <textarea name="mensajeAgradecimiento" value={form.mensajeAgradecimiento} onChange={onChange} />
+      <section className="agSection">
+        <article className="agCard" style={{ maxWidth: 980, margin: "0 auto" }}>
+          <h3 style={{ marginBottom: 16 }}>Configuracion de comprobantes</h3>
+          <form className="agForm" onSubmit={onSubmit}>
+            <div className="agFormRow">
+              <label>Razon social
+                <input name="nombreComercial" value={form.nombreComercial} onChange={onChange} />
               </label>
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button className="agBtn agBtn--ghost" type="button">Cancelar</button>
-                <button className="agBtn" type="submit" disabled={saving}>{saving ? "Guardando..." : "Guardar Cambios"}</button>
-              </div>
-            </form>
-            {msg ? <p className="agOk">{msg}</p> : null}
-            {err ? <p className="agErr">{err}</p> : null}
-          </article>
+              <label>Titulo comprobante
+                <input name="tituloComprobante" value={form.tituloComprobante} onChange={onChange} />
+              </label>
+            </div>
+            <label>Direccion legal
+              <input name="direccion" value={form.direccion} onChange={onChange} />
+            </label>
+            <div className="agFormRow">
+              <label>Telefono de contacto
+                <input name="telefono" value={form.telefono} onChange={onChange} />
+              </label>
+              <label>Email administrativo
+                <input name="email" value={form.email} onChange={onChange} />
+              </label>
+            </div>
+            <label>Pie de comprobante / mensaje final
+              <textarea name="mensajeAgradecimiento" value={form.mensajeAgradecimiento} onChange={onChange} />
+            </label>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="agBtn agBtn--ghost" type="button" onClick={() => setForm(initial)}>Restablecer</button>
+              <button className="agBtn" type="submit" disabled={saving}>{saving ? "Guardando..." : "Guardar cambios"}</button>
+            </div>
+          </form>
+          {msg ? <p className="agOk">{msg}</p> : null}
+          {err ? <p className="agErr">{err}</p> : null}
+        </article>
 
-          <div className="agHint" style={{ marginTop: 12 }}>
-            Los cambios se reflejaran al instante en comprobantes de venta mostrador y ecommerce.
-          </div>
+        <div className="agHint" style={{ marginTop: 12, maxWidth: 980, marginInline: "auto" }}>
+          Los cambios impactan en comprobantes de venta presencial y ecommerce.
         </div>
       </section>
     </>

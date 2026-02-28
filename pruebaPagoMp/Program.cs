@@ -55,6 +55,9 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SecurityLogger>();
 builder.Services.AddDataProtection();
 builder.Services.AddSingleton<CampoProtegidoService>();
+builder.Services.AddSingleton<ICryptoService, AesCryptoService>();
+builder.Services.AddScoped<IDigitoVerificadorService, DigitoVerificadorService>();
+builder.Services.AddScoped<IBackupRestoreService, BackupRestoreService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();
 builder.Services.AddScoped<pruebaPagoMp.Services.Pagos.IMercadoPagoService, pruebaPagoMp.Services.Pagos.MercadoPagoService>();
 builder.Services.AddHttpClient();
@@ -94,6 +97,12 @@ builder.Services.AddAuthorization();
 // 2️⃣ BUILD
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
@@ -197,6 +206,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+app.UseStaticFiles();
 
 app.UseCors("AllowReactApp");
 

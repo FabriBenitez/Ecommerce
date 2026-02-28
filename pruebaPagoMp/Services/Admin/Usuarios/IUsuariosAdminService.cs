@@ -10,4 +10,5 @@ public interface IUsuariosAdminService
     Task ActualizarUsuarioInternoAsync(int usuarioId, ActualizarUsuarioInternoDto dto);
     Task AsignarRolesAsync(int usuarioId, AsignarRolesDto dto);
     Task CambiarActivoAsync(int usuarioId, CambiarActivoDto dto);
+    Task CambiarPasswordAsync(int usuarioId, string nuevaPassword);
 }

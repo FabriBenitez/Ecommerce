@@ -1,0 +1,96 @@
+.stockForms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stockCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+}
+
+.stockCard__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.stockCard__desc {
+  margin: 8px 0 14px;
+  color: #475569;
+  font-size: 14px;
+}
+
+.stockCard__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stockCard__grid label,
+.stockCard__file {
+  display: grid;
+  gap: 6px;
+}
+
+.stockCard__grid label span,
+.stockCard__file span {
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+}
+
+.stockCard__grid input,
+.stockCard__file input {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 12px;
+  border: 1px solid #d6dce8;
+  padding: 0 12px;
+  background: #fff;
+}
+
+.stockCard__file input {
+  padding: 8px 10px;
+}
+
+.stockCard__file--full {
+  margin-top: 6px;
+}
+
+.stockCard__actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.stockHelp {
+  margin-bottom: 10px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.stockHelp code {
+  background: #e2e8f0;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .stockForms {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .stockCard__grid {
+    grid-template-columns: 1fr;
+  }
+}

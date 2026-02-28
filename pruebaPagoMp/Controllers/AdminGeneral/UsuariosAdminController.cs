@@ -86,4 +86,18 @@ public class UsuariosAdminController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    [HttpPut("{id:int}/password")]
+    public async Task<IActionResult> CambiarPassword([FromRoute] int id, [FromBody] CambiarPasswordAdminDto dto)
+    {
+        try
+        {
+            await _service.CambiarPasswordAsync(id, dto.NuevaPassword);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 }

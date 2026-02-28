@@ -1,18 +1,31 @@
 using Microsoft.EntityFrameworkCore;
 using pruebaPagoMp.Data;
 using pruebaPagoMp.Dtos.Compras;
+using pruebaPagoMp.Models.Bitacora;
 using pruebaPagoMp.Models.Compras;
 using pruebaPagoMp.Models.Compras.Enums;
+using pruebaPagoMp.Security;
+using pruebaPagoMp.Services.Bitacora;
 
 namespace pruebaPagoMp.Services.Compras;
 
 public class ComprasService : IComprasService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ICryptoService _cryptoService;
+    private readonly IDigitoVerificadorService _dvService;
+    private readonly IBitacoraService _bitacoraService;
 
-    public ComprasService(ApplicationDbContext context)
+    public ComprasService(
+        ApplicationDbContext context,
+        ICryptoService cryptoService,
+        IDigitoVerificadorService dvService,
+        IBitacoraService bitacoraService)
     {
         _context = context;
+        _cryptoService = cryptoService;
+        _dvService = dvService;
+        _bitacoraService = bitacoraService;
     }
     public async Task<int> CrearProveedorAsync(ProveedorCreateDto dto)
     {
@@ -22,14 +35,23 @@ public class ComprasService : IComprasService
         var proveedor = new Proveedor
         {
             RazonSocial = dto.RazonSocial.Trim(),
-            CUIT = dto.CUIT.Trim(),
+            CUIT = _cryptoService.Encrypt(dto.CUIT.Trim()),
+            CuitHash = SecurityHashing.Sha256Normalized(dto.CUIT),
             Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim(),
             Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim(),
             Activo = dto.Activo
         };
+        await _dvService.RecalcularEntidadAsync(proveedor);
 
         _context.Proveedores.Add(proveedor);
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("Proveedores");
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            Accion = "PROVEEDOR_CREAR",
+            Detalle = $"Proveedor #{proveedor.Id} creado.",
+            Resultado = "OK"
+        });
         return proveedor.Id;
     }
 
@@ -40,7 +62,7 @@ public class ComprasService : IComprasService
         if (activos.HasValue)
             q = q.Where(p => p.Activo == activos.Value);
 
-        return await q
+        var data = await q
             .OrderBy(p => p.RazonSocial)
             .Select(p => new ProveedorListDto
             {
@@ -50,11 +72,14 @@ public class ComprasService : IComprasService
                 Activo = p.Activo
             })
             .ToListAsync();
+
+        data.ForEach(p => p.CUIT = SafeDecrypt(p.CUIT));
+        return data;
     }
 
     public async Task<ProveedorListDto?> ObtenerProveedorPorIdAsync(int id)
     {
-        return await _context.Proveedores
+        var data = await _context.Proveedores
             .AsNoTracking()
             .Where(p => p.Id == id)
             .Select(p => new ProveedorListDto
@@ -67,6 +92,9 @@ public class ComprasService : IComprasService
                 Activo = p.Activo
             })
             .FirstOrDefaultAsync();
+        
+        if (data != null) data.CUIT = SafeDecrypt(data.CUIT);
+        return data;
     }
 
     public async Task ActualizarProveedorAsync(int id, ProveedorCreateDto dto)
@@ -75,12 +103,21 @@ public class ComprasService : IComprasService
         if (proveedor == null) throw new InvalidOperationException("Proveedor inexistente.");
 
         proveedor.RazonSocial = dto.RazonSocial.Trim();
-        proveedor.CUIT = dto.CUIT.Trim();
+        proveedor.CUIT = _cryptoService.Encrypt(dto.CUIT.Trim());
+        proveedor.CuitHash = SecurityHashing.Sha256Normalized(dto.CUIT);
         proveedor.Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
         proveedor.Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim();
         proveedor.Activo = dto.Activo;
+        await _dvService.RecalcularEntidadAsync(proveedor);
 
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("Proveedores");
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            Accion = "PROVEEDOR_ACTUALIZAR",
+            Detalle = $"Proveedor #{proveedor.Id} actualizado.",
+            Resultado = "OK"
+        });
     }
     public async Task<int> CrearCompraAsync(CrearCompraDto dto)
     {
@@ -137,7 +174,15 @@ public class ComprasService : IComprasService
         }
 
         compra.Total = total;
+        await _dvService.RecalcularEntidadAsync(compra);
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("Compras");
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            Accion = "COMPRA_CREAR",
+            Detalle = $"Compra #{compra.Id} creada.",
+            Resultado = "OK"
+        });
 
         return compra.Id;
     }
@@ -162,9 +207,17 @@ public class ComprasService : IComprasService
         }
 
         compra.EstadoCompra = EstadoCompra.Confirmada;
+        await _dvService.RecalcularEntidadAsync(compra);
 
         await _context.SaveChangesAsync();
         await tx.CommitAsync();
+        await _dvService.RecalcularDVVAsync("Compras");
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            Accion = "COMPRA_CONFIRMAR",
+            Detalle = $"Compra #{compra.Id} confirmada.",
+            Resultado = "OK"
+        });
     }
 
     public async Task<List<CompraListDto>> ListarComprasAsync(int? proveedorId)
@@ -208,7 +261,7 @@ public class ComprasService : IComprasService
             compra.Fecha,
             compra.Total,
             compra.EstadoCompra,
-            Proveedor = new { compra.ProveedorId, compra.Proveedor.RazonSocial, compra.Proveedor.CUIT },
+            Proveedor = new { compra.ProveedorId, compra.Proveedor.RazonSocial, CUIT = SafeDecrypt(compra.Proveedor.CUIT) },
             Factura = compra.FacturaProveedor == null ? null : new
             {
                 compra.FacturaProveedor.Id,
@@ -252,5 +305,23 @@ public class ComprasService : IComprasService
         };
 
         await _context.SaveChangesAsync();
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            Accion = "COMPRA_FACTURA_REGISTRAR",
+            Detalle = $"Factura registrada para compra #{compraId}.",
+            Resultado = "OK"
+        });
+    }
+
+    private string SafeDecrypt(string value)
+    {
+        try
+        {
+            return _cryptoService.Decrypt(value);
+        }
+        catch
+        {
+            return value;
+        }
     }
 }

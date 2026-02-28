@@ -16,4 +16,5 @@ public class Compra
     public ICollection<DetalleCompra> Detalles { get; set; } = new List<DetalleCompra>();
 
     public FacturaProveedor? FacturaProveedor { get; set; }
+    public string DigitoVerificador { get; set; } = "";
 }

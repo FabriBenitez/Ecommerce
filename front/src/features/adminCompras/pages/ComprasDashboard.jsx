@@ -26,7 +26,7 @@ export default function ComprasDashboard() {
       try {
         setError("");
         setLoading(true);
-        const resp = await adminComprasDashboard(10); // ✅ stock mínimo fijo = 10
+        const resp = await adminComprasDashboard();
         if (!alive) return;
         setData(resp);
       } catch (e) {
@@ -133,3 +133,4 @@ export default function ComprasDashboard() {
     </div>
   );
 }
+

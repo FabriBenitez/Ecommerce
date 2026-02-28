@@ -4,7 +4,8 @@ namespace pruebaPagoMp.Services
 {
     public interface IProductoService
     {
-        // Este método devolverá la lista de libros mapeada a DTO
         Task<IEnumerable<ProductoDto>> GetCatalogoAsync();
+        Task<int> CrearAsync(CrearProductoDto dto);
+        Task<int> ImportarArchivoAsync(Stream stream, string fileName);
     }
 }

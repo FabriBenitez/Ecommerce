@@ -6,6 +6,7 @@ public class PromocionListDto
     public string Nombre { get; set; } = null!;
     public int? ProductoId { get; set; }
     public string? ProductoNombre { get; set; }
+    public string? Genero { get; set; }
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
     public bool Activa { get; set; }

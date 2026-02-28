@@ -3,6 +3,7 @@ using pruebaPagoMp.Data;
 using pruebaPagoMp.Dtos.Caja;
 using pruebaPagoMp.Models.Bitacora;
 using pruebaPagoMp.Models.Caja.Enums;
+using pruebaPagoMp.Security;
 using pruebaPagoMp.Services.Bitacora;
 
 namespace pruebaPagoMp.Services.Caja;
@@ -11,11 +12,13 @@ public class CajaService : ICajaService
 {
     private readonly ApplicationDbContext _context;
     private readonly IBitacoraService _bitacoraService;
+    private readonly IDigitoVerificadorService _dvService;
 
-    public CajaService(ApplicationDbContext context, IBitacoraService bitacoraService)
+    public CajaService(ApplicationDbContext context, IBitacoraService bitacoraService, IDigitoVerificadorService dvService)
     {
         _context = context;
         _bitacoraService = bitacoraService;
+        _dvService = dvService;
     }
 
     public async Task<CajaResumenDto> AbrirAsync(AbrirCajaDto dto)
@@ -35,6 +38,7 @@ public class CajaService : ICajaService
 
         _context.Cajas.Add(caja);
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("MovimientosCaja");
 
         await _bitacoraService.RegistrarAsync(new BitacoraEntry
         {
@@ -73,6 +77,7 @@ public class CajaService : ICajaService
         caja.Observaciones = dto.Observaciones ?? caja.Observaciones;
 
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("MovimientosCaja");
 
         await _bitacoraService.RegistrarAsync(new BitacoraEntry
         {

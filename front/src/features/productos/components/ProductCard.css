@@ -111,13 +111,6 @@
   color: #3a3a3a;
 }
 
-.productCard__promoName {
-  margin: 0;
-  font-size: 12px;
-  color: #0a8f49;
-  font-weight: 700;
-}
-
 .productCard__btn {
   border: none;
   border-radius: 10px;

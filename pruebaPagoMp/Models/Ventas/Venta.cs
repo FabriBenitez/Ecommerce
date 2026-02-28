@@ -35,5 +35,6 @@ public class Venta
 
     public EstadoRetiro EstadoRetiro { get; set; } = EstadoRetiro.Pendiente;
     public ICollection<VentaPago> Pagos { get; set; } = new List<VentaPago>();
+    public string DigitoVerificador { get; set; } = "";
 }
 

@@ -149,7 +149,7 @@ export default function Carrito() {
               </button>
 
               <p className="cartSummary__hint">
-                En checkout vas a completar datos de entrega y se genera el link de Mercado Pago.
+                En checkout se genera el link de Mercado Pago para retiro presencial en tienda.
               </p>
             </div>
           </aside>

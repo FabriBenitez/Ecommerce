@@ -8,6 +8,8 @@ using BCrypt.Net;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using pruebaPagoMp.Security;
+using pruebaPagoMp.Models.Bitacora;
+using pruebaPagoMp.Services.Bitacora;
 
 
 [ApiController]
@@ -19,13 +21,15 @@ public class AuthController : ControllerBase
     private readonly IJwtService _jwtService;
     private readonly SecurityLogger _securityLogger;
     private readonly PasswordHasher _passwordHasher;
+    private readonly IBitacoraService _bitacoraService;
 
     public AuthController(
         AuthService authService,
         ApplicationDbContext context,
         IJwtService jwtService,
         SecurityLogger securityLogger,
-        PasswordHasher passwordHasher
+        PasswordHasher passwordHasher,
+        IBitacoraService bitacoraService
     )
     {
         _authService = authService;
@@ -33,18 +37,34 @@ public class AuthController : ControllerBase
         _jwtService = jwtService;
         _securityLogger = securityLogger;
         _passwordHasher = passwordHasher;
+        _bitacoraService = bitacoraService;
     }
 
     [HttpPost("register")]
     public IActionResult Register([FromBody] RegisterDto dto)
     {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         try
         {
             _authService.Register(dto);
+            _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                Accion = "AUTH_REGISTER",
+                Detalle = $"Registro usuario {dto.Email}",
+                Ip = ip,
+                Resultado = "OK"
+            }).GetAwaiter().GetResult();
             return Ok("Usuario registrado");
         }
         catch (Exception ex)
         {
+            _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                Accion = "AUTH_REGISTER",
+                Detalle = $"Error registro {dto.Email}: {ex.Message}",
+                Ip = ip,
+                Resultado = "ERROR"
+            }).GetAwaiter().GetResult();
             return BadRequest(ex.Message);
         }
     }
@@ -66,6 +86,13 @@ public class AuthController : ControllerBase
         if (usuario == null)
         {
             _securityLogger.LoginFail(email, ip);
+            await _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                Accion = "AUTH_LOGIN",
+                Detalle = $"Login fallido {email}",
+                Ip = ip,
+                Resultado = "ERROR"
+            });
             return Unauthorized("Credenciales invalidas");
         }
 
@@ -75,6 +102,14 @@ public class AuthController : ControllerBase
         if (!passwordOk)
         {
             _securityLogger.LoginFail(email, ip);
+            await _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                UsuarioId = usuario.Id,
+                Accion = "AUTH_LOGIN",
+                Detalle = $"Password inválida {email}",
+                Ip = ip,
+                Resultado = "ERROR"
+            });
             return Unauthorized("Credenciales invalidas");
         }
 
@@ -106,6 +141,14 @@ public class AuthController : ControllerBase
 
         // 7. Log de seguridad (OK)
         _securityLogger.LoginOk(usuario.Id, ip);
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            UsuarioId = usuario.Id,
+            Accion = "AUTH_LOGIN",
+            Detalle = $"Login OK {email}",
+            Ip = ip,
+            Resultado = "OK"
+        });
 
         // 8. Respuesta FINAL
         return Ok(new
@@ -174,6 +217,51 @@ public class AuthController : ControllerBase
             accessToken = newAccessToken,
             refreshToken = newRefreshToken.Token
         });
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] RefreshTokenDto dto)
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        int.TryParse(userIdStr, out var userId);
+
+        try
+        {
+            var token = await _context.RefreshTokens
+                .FirstOrDefaultAsync(x => x.Token == dto.RefreshToken && x.UsuarioId == userId && !x.IsRevoked);
+
+            if (token != null)
+            {
+                token.IsRevoked = true;
+                await _context.SaveChangesAsync();
+            }
+
+            await _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                UsuarioId = userId > 0 ? userId : null,
+                Accion = "AUTH_LOGOUT",
+                Detalle = "Logout OK",
+                Ip = ip,
+                Resultado = "OK"
+            });
+
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            await _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                UsuarioId = userId > 0 ? userId : null,
+                Accion = "AUTH_LOGOUT",
+                Detalle = ex.Message,
+                Ip = ip,
+                Resultado = "ERROR"
+            });
+
+            return BadRequest("No se pudo cerrar sesión.");
+        }
     }
 
     private bool VerifyPassword(string password, string storedHash)

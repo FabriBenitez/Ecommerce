@@ -166,46 +166,25 @@ export default function VentaDetalle() {
           </section>
 
           <section className="entregaCard">
-            <h2 className="sectionTitle">Entrega</h2>
-
-            <div className="entregaGrid">
-              <div>
-                <span className="k">Nombre</span>
-                <span className="v">{venta.nombreEntrega ?? "-"}</span>
-              </div>
-              <div>
-                <span className="k">Teléfono</span>
-                <span className="v">{venta.telefonoEntrega ?? "-"}</span>
-              </div>
-              <div className="col2">
-                <span className="k">Dirección</span>
-                <span className="v">{venta.direccionEntrega ?? "-"}</span>
-              </div>
-              <div>
-                <span className="k">Ciudad</span>
-                <span className="v">{venta.ciudad ?? "-"}</span>
-              </div>
-              <div>
-                <span className="k">Provincia</span>
-                <span className="v">{venta.provincia ?? "-"}</span>
-              </div>
-              <div>
-                <span className="k">Código postal</span>
-                <span className="v">{venta.codigoPostal ?? "-"}</span>
-              </div>
-              <div className="col2">
-                <span className="k">Observaciones</span>
-                <span className="v v--multiline">
-                  {(venta.observaciones ?? "-")
-                    .replaceAll(" | ", "\n")
-                    .replaceAll(" - ", "\n")}
-                </span>
-
-              </div>
-            </div>
-          </section>
+  <h2 className="sectionTitle">Retiro presencial</h2>
+  <div className="entregaGrid">
+    <div>
+      <span className="k">Estado retiro</span>
+      <span className="v">{venta.estadoRetiro === 1 ? "Pendiente" : venta.estadoRetiro === 2 ? "Preparando" : venta.estadoRetiro === 3 ? "Listo para retirar" : venta.estadoRetiro === 4 ? "Entregado" : "-"}</span>
+    </div>
+    <div>
+      <span className="k">Cliente DNI</span>
+      <span className="v">{venta.clienteDni ?? "-"}</span>
+    </div>
+    <div className="col2">
+      <span className="k">Observaciones</span>
+      <span className="v v--multiline">{(venta.observaciones ?? "-").replaceAll(" | ", "\n")}</span>
+    </div>
+  </div>
+</section>
         </>
       ) : null}
     </main>
   );
 }
+

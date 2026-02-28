@@ -63,6 +63,9 @@ export default function ComprasNavbar() {
             <NavLink to="/compras/seguimiento" className={linkClass}>
               Compras
             </NavLink>
+            <NavLink to="/compras/promociones" className={linkClass}>
+              Promociones
+            </NavLink>
             <NavLink to="/compras/historial" className={linkClass}>
               Historial
             </NavLink>
@@ -103,6 +106,9 @@ export default function ComprasNavbar() {
           </NavLink>
           <NavLink to="/compras/seguimiento" className={linkClass} onClick={() => setOpen(false)}>
             Compras
+          </NavLink>
+          <NavLink to="/compras/promociones" className={linkClass} onClick={() => setOpen(false)}>
+            Promociones
           </NavLink>
           <NavLink to="/compras/historial" className={linkClass} onClick={() => setOpen(false)}>
             Historial

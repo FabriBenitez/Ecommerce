@@ -3,6 +3,7 @@ using pruebaPagoMp.Data;
 using pruebaPagoMp.Dtos.Admin.Usuarios;
 using pruebaPagoMp.Models;
 using pruebaPagoMp.Models.Bitacora;
+using pruebaPagoMp.Security;
 using pruebaPagoMp.Services.Bitacora;
 
 namespace pruebaPagoMp.Services.Admin.Usuarios;
@@ -11,11 +12,16 @@ public class UsuariosAdminService : IUsuariosAdminService
 {
     private readonly ApplicationDbContext _context;
     private readonly IBitacoraService _bitacoraService;
+    private readonly IDigitoVerificadorService _dvService;
 
-    public UsuariosAdminService(ApplicationDbContext context, IBitacoraService bitacoraService)
+    public UsuariosAdminService(
+        ApplicationDbContext context,
+        IBitacoraService bitacoraService,
+        IDigitoVerificadorService dvService)
     {
         _context = context;
         _bitacoraService = bitacoraService;
+        _dvService = dvService;
     }
 
     public async Task<int> CrearUsuarioInternoAsync(CrearUsuarioInternoDto dto)
@@ -33,11 +39,13 @@ public class UsuariosAdminService : IUsuariosAdminService
             NombreCompleto = dto.NombreCompleto.Trim(),
             Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim(),
             Dni = string.IsNullOrWhiteSpace(dto.Dni) ? null : dto.Dni.Trim(),
+            DniHash = SecurityHashing.Sha256Normalized(dto.Dni),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.PasswordTemporal),
             DigitoVerificador = "INIT",
             Activo = true,
             FechaCreacion = DateTime.UtcNow
         };
+        await _dvService.RecalcularEntidadAsync(usuario);
 
         _context.Usuarios.Add(usuario);
         await _context.SaveChangesAsync();
@@ -55,6 +63,7 @@ public class UsuariosAdminService : IUsuariosAdminService
 
             await _context.SaveChangesAsync();
         }
+        await _dvService.RecalcularDVVAsync("Usuarios");
 
         await _bitacoraService.RegistrarAsync(new BitacoraEntry
         {
@@ -69,7 +78,7 @@ public class UsuariosAdminService : IUsuariosAdminService
 
     public async Task<List<UsuarioListDto>> ListarAsync()
     {
-        return await _context.Usuarios
+        var data = await _context.Usuarios
             .AsNoTracking()
             .Where(u => u.UsuarioRoles.Any(ur => ur.Rol.Nombre == "AdminCompras" || ur.Rol.Nombre == "AdminVentas"))
             .OrderBy(u => u.Email)
@@ -83,6 +92,8 @@ public class UsuariosAdminService : IUsuariosAdminService
                 Roles = u.UsuarioRoles.Select(ur => ur.Rol.Nombre).ToList()
             })
             .ToListAsync();
+
+        return data;
     }
 
     public async Task ActualizarUsuarioInternoAsync(int usuarioId, ActualizarUsuarioInternoDto dto)
@@ -99,6 +110,7 @@ public class UsuariosAdminService : IUsuariosAdminService
 
         usuario.Email = dto.Email.Trim();
         usuario.Dni = string.IsNullOrWhiteSpace(dto.Dni) ? null : dto.Dni.Trim();
+        usuario.DniHash = SecurityHashing.Sha256Normalized(dto.Dni);
 
         if (!string.IsNullOrWhiteSpace(dto.NuevaPassword))
             usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NuevaPassword.Trim());
@@ -110,7 +122,9 @@ public class UsuariosAdminService : IUsuariosAdminService
         _context.UsuarioRoles.RemoveRange(actuales);
         _context.UsuarioRoles.Add(new UsuarioRol { UsuarioId = usuarioId, RolId = rolDestino.Id });
 
+        await _dvService.RecalcularEntidadAsync(usuario);
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("Usuarios");
 
         await _bitacoraService.RegistrarAsync(new BitacoraEntry
         {
@@ -123,7 +137,7 @@ public class UsuariosAdminService : IUsuariosAdminService
 
     public async Task<UsuarioDetalleDto?> ObtenerDetalleAsync(int id)
     {
-        return await _context.Usuarios
+        var data = await _context.Usuarios
             .AsNoTracking()
             .Where(u => u.Id == id)
             .Select(u => new UsuarioDetalleDto
@@ -139,6 +153,8 @@ public class UsuariosAdminService : IUsuariosAdminService
                 Roles = u.UsuarioRoles.Select(ur => ur.Rol.Nombre).ToList()
             })
             .FirstOrDefaultAsync();
+        
+        return data;
     }
 
     public async Task AsignarRolesAsync(int usuarioId, AsignarRolesDto dto)
@@ -159,6 +175,7 @@ public class UsuariosAdminService : IUsuariosAdminService
         }
 
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("Usuarios");
 
         await _bitacoraService.RegistrarAsync(new BitacoraEntry
         {
@@ -175,13 +192,36 @@ public class UsuariosAdminService : IUsuariosAdminService
         if (usuario == null) throw new InvalidOperationException("Usuario inexistente.");
 
         usuario.Activo = dto.Activo;
+        await _dvService.RecalcularEntidadAsync(usuario);
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("Usuarios");
 
         await _bitacoraService.RegistrarAsync(new BitacoraEntry
         {
             UsuarioId = usuarioId,
             Accion = "USUARIO_CAMBIAR_ACTIVO",
             Detalle = $"Nuevo estado activo: {dto.Activo}",
+            Resultado = "OK"
+        });
+    }
+
+    public async Task CambiarPasswordAsync(int usuarioId, string nuevaPassword)
+    {
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Id == usuarioId);
+        if (usuario == null) throw new InvalidOperationException("Usuario inexistente.");
+        if (string.IsNullOrWhiteSpace(nuevaPassword) || nuevaPassword.Trim().Length < 6)
+            throw new InvalidOperationException("La nueva password debe tener al menos 6 caracteres.");
+
+        usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(nuevaPassword.Trim());
+        await _dvService.RecalcularEntidadAsync(usuario);
+        await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("Usuarios");
+
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            UsuarioId = usuarioId,
+            Accion = "USUARIO_CAMBIAR_PASSWORD",
+            Detalle = "Password actualizada por AdminGeneral.",
             Resultado = "OK"
         });
     }

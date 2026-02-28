@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using pruebaPagoMp.Dtos.Ventas;
+using pruebaPagoMp.Models.Bitacora;
+using pruebaPagoMp.Services.Bitacora;
 using pruebaPagoMp.Services.Ventas;
 
 namespace pruebaPagoMp.Controllers;
@@ -12,10 +14,12 @@ namespace pruebaPagoMp.Controllers;
 public class VentasController : ControllerBase
 {
     private readonly IVentasService _ventasService;
+    private readonly IBitacoraService _bitacoraService;
 
-    public VentasController(IVentasService ventasService)
+    public VentasController(IVentasService ventasService, IBitacoraService bitacoraService)
     {
         _ventasService = ventasService;
+        _bitacoraService = bitacoraService;
     }
 
     [HttpPost("web/checkout")]
@@ -29,8 +33,23 @@ public class VentasController : ControllerBase
         if (!int.TryParse(usuarioIdStr, out var usuarioId))
             return Unauthorized("Token invalido (sin usuarioId).");
 
-        var resp = await _ventasService.CheckoutVentaWebAsync(usuarioId, dto);
-        return Ok(resp);
+        try
+        {
+            var resp = await _ventasService.CheckoutVentaWebAsync(usuarioId, dto);
+            return Ok(resp);
+        }
+        catch (Exception ex)
+        {
+            await _bitacoraService.RegistrarAsync(new BitacoraEntry
+            {
+                UsuarioId = usuarioId,
+                Accion = "VENTA_WEB_CHECKOUT",
+                Detalle = ex.Message,
+                Ip = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Resultado = "ERROR"
+            });
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpGet("{id:int}")]

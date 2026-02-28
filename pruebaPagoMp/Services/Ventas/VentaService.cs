@@ -4,9 +4,12 @@ using pruebaPagoMp.Dtos.Ventas;
 using pruebaPagoMp.Models;
 using pruebaPagoMp.Models.Caja;
 using pruebaPagoMp.Models.Caja.Enums;
+using pruebaPagoMp.Models.Bitacora;
 using pruebaPagoMp.Models.Ventas;
 using pruebaPagoMp.Services.Pagos;
 using pruebaPagoMp.Models.Ventas.Enums;
+using pruebaPagoMp.Security;
+using pruebaPagoMp.Services.Bitacora;
 
 namespace pruebaPagoMp.Services.Ventas;
 
@@ -14,11 +17,19 @@ public class VentasService : IVentasService
 {
     private readonly ApplicationDbContext _context;
     private readonly IMercadoPagoService _mercadoPagoService;
+    private readonly IDigitoVerificadorService _dvService;
+    private readonly IBitacoraService _bitacoraService;
 
-    public VentasService(ApplicationDbContext context, IMercadoPagoService mercadoPagoService)
+    public VentasService(
+        ApplicationDbContext context,
+        IMercadoPagoService mercadoPagoService,
+        IDigitoVerificadorService dvService,
+        IBitacoraService bitacoraService)
     {
         _context = context;
         _mercadoPagoService = mercadoPagoService;
+        _dvService = dvService;
+        _bitacoraService = bitacoraService;
     }
     public async Task<int> RegistrarDevolucionPresencialAsync(int ventaId, DevolucionPresencialDto dto)
     {
@@ -158,8 +169,23 @@ public class VentasService : IVentasService
                 $"Devolución parcial registrada ({DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC).");
         }
 
+        await _dvService.RecalcularEntidadAsync(venta);
+        var movs = _context.ChangeTracker.Entries<MovimientoCaja>()
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified)
+            .Select(e => e.Entity)
+            .ToList();
+        foreach (var mov in movs) await _dvService.RecalcularEntidadAsync(mov);
+
         await _context.SaveChangesAsync();
         await tx.CommitAsync();
+        await _dvService.RecalcularDVVAsync("Ventas");
+        await _dvService.RecalcularDVVAsync("MovimientosCaja");
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            Accion = "VENTA_DEVOLUCION",
+            Detalle = $"Devolución presencial en venta #{ventaId}.",
+            Resultado = "OK"
+        });
 
         return notaCreditoId;
 
@@ -202,11 +228,12 @@ public class VentasService : IVentasService
             Fecha = DateTime.UtcNow,
             UsuarioId = usuarioId,
             ClienteDni = dto.ClienteDni?.Trim(),
-            ClienteNombre = dto.NombreEntrega,
+            ClienteNombre = null,
             EstadoVenta = EstadoVenta.Pendiente,   // ajustá si tu propiedad se llama distinto
             Canal = CanalVenta.Web,                // ajustá si tu propiedad se llama distinto
             Total = 0m
         };
+        await _dvService.RecalcularEntidadAsync(venta);
 
         _context.Ventas.Add(venta);
         await _context.SaveChangesAsync(); // para obtener Venta.Id
@@ -234,18 +261,12 @@ public class VentasService : IVentasService
 
             _context.DetalleVentas.Add(detalle);
         }
-        venta.NombreEntrega = dto.NombreEntrega;
-        venta.TelefonoEntrega = dto.TelefonoEntrega;
-        venta.DireccionEntrega = dto.DireccionEntrega;
-        venta.Ciudad = dto.Ciudad;
-        venta.Provincia = dto.Provincia;
-        venta.CodigoPostal = dto.CodigoPostal;
-
-        // solo lo libre queda en Observaciones
+        // retiro presencial: sin datos de entrega
         venta.Observaciones = dto.Observaciones;
 
 
         venta.Total = total;
+        await _dvService.RecalcularEntidadAsync(venta);
         await _context.SaveChangesAsync();
 
         // 4) Crear preferencia MercadoPago usando external_reference = venta.Id
@@ -264,6 +285,14 @@ public class VentasService : IVentasService
         // 6) (Opcional) vaciar carrito luego de crear venta pendiente
         _context.CarritoItems.RemoveRange(carrito.CarritoItems);
         await _context.SaveChangesAsync();
+        await _dvService.RecalcularDVVAsync("Ventas");
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            UsuarioId = usuarioId,
+            Accion = "VENTA_WEB_CHECKOUT",
+            Detalle = $"Checkout web venta #{venta.Id}.",
+            Resultado = "OK"
+        });
 
         return new CheckoutVentaWebRespuestaDto
         {
@@ -300,9 +329,17 @@ public class VentasService : IVentasService
         }
 
         venta.EstadoVenta = EstadoVenta.Pagada;
+        await _dvService.RecalcularEntidadAsync(venta);
 
         await _context.SaveChangesAsync();
         await tx.CommitAsync();
+        await _dvService.RecalcularDVVAsync("Ventas");
+        await _bitacoraService.RegistrarAsync(new BitacoraEntry
+        {
+            Accion = "VENTA_WEB_CONFIRMAR_PAGO",
+            Detalle = $"Pago confirmado venta #{ventaId}.",
+            Resultado = "OK"
+        });
 
         return venta.Id;
     }
@@ -352,6 +389,7 @@ public class VentasService : IVentasService
         ClienteDni = dto.ClienteDni?.Trim(),
         ClienteNombre = dto.ClienteNombre?.Trim(),
     };
+    await _dvService.RecalcularEntidadAsync(venta);
 
     _context.Ventas.Add(venta);
     await _context.SaveChangesAsync(); // obtener venta.Id
@@ -381,6 +419,7 @@ public class VentasService : IVentasService
     }
 
     venta.Total = total;
+    await _dvService.RecalcularEntidadAsync(venta);
     await _context.SaveChangesAsync();
 
     // 5) Validar pagos combinados: suma == total (con redondeo para evitar falso mismatch)
@@ -439,8 +478,23 @@ public class VentasService : IVentasService
         }
     }
 
+    var movimientosCaja = _context.ChangeTracker.Entries<MovimientoCaja>()
+        .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified)
+        .Select(e => e.Entity)
+        .ToList();
+    foreach (var mov in movimientosCaja) await _dvService.RecalcularEntidadAsync(mov);
+
     await _context.SaveChangesAsync();
     await tx.CommitAsync();
+    await _dvService.RecalcularDVVAsync("Ventas");
+    await _dvService.RecalcularDVVAsync("MovimientosCaja");
+    await _bitacoraService.RegistrarAsync(new BitacoraEntry
+    {
+        UsuarioId = adminUsuarioId,
+        Accion = "VENTA_PRESENCIAL_CREAR",
+        Detalle = $"Venta presencial #{venta.Id}.",
+        Resultado = "OK"
+    });
 
     return venta.Id;
 }
@@ -560,5 +614,6 @@ public class VentasService : IVentasService
     }
 
 }
+
 
 

@@ -135,6 +135,22 @@ namespace pruebaPagoMp.Migrations
                     b.ToTable("UsuarioRoles");
                 });
 
+            modelBuilder.Entity("pruebaPagoMp.Models.Administracion.ConfiguracionSistema", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("StockMinimoAlerta")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracionesSistema");
+                });
+
             modelBuilder.Entity("pruebaPagoMp.Models.Administracion.DatosFacturaEmpresa", b =>
                 {
                     b.Property<int>("Id")
@@ -245,6 +261,10 @@ namespace pruebaPagoMp.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Concepto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DigitoVerificador")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -364,6 +384,10 @@ namespace pruebaPagoMp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("DigitoVerificador")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("EstadoCompra")
                         .HasColumnType("int");
 
@@ -456,6 +480,13 @@ namespace pruebaPagoMp.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("CUIT")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CuitHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DigitoVerificador")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -680,6 +711,9 @@ namespace pruebaPagoMp.Migrations
                     b.Property<DateTime>("FechaInicio")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Genero")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal?>("MontoDescuento")
                         .HasColumnType("decimal(18,2)");
 
@@ -714,6 +748,9 @@ namespace pruebaPagoMp.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Dni")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DniHash")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -807,6 +844,10 @@ namespace pruebaPagoMp.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CodigoPostal")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DigitoVerificador")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DireccionEntrega")

@@ -19,12 +19,21 @@ public class AdminComprasDashboardController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get([FromQuery] int stockMinimo = 10)
+    public async Task<IActionResult> Get([FromQuery] int? stockMinimo = null)
     {
+        if (!stockMinimo.HasValue)
+        {
+            stockMinimo = await _context.ConfiguracionesSistema
+                .AsNoTracking()
+                .Where(x => x.Id == 1)
+                .Select(x => (int?)x.StockMinimoAlerta)
+                .FirstOrDefaultAsync() ?? 10;
+        }
+
         // 1) Stock bajo
         var stockBajoCount = await _context.Productos
             .AsNoTracking()
-            .CountAsync(p => p.Stock < stockMinimo);
+            .CountAsync(p => p.Stock < stockMinimo.Value);
 
         // 2) Compras pendientes
         var comprasPendientesCount = await _context.Compras
@@ -50,7 +59,7 @@ public class AdminComprasDashboardController : ControllerBase
 
         return Ok(new
         {
-            stockMinimo,
+            stockMinimo = stockMinimo.Value,
             stockBajoCount,
             comprasPendientesCount,
             ultimasConfirmadas

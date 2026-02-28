@@ -44,6 +44,7 @@ public partial class ApplicationDbContext : DbContext
     public DbSet<BitacoraEntry> BitacoraEntries => Set<BitacoraEntry>();
     public DbSet<Promocion> Promociones => Set<Promocion>();
     public DbSet<DatosFacturaEmpresa> DatosFacturaEmpresas => Set<DatosFacturaEmpresa>();
+    public DbSet<ConfiguracionSistema> ConfiguracionesSistema => Set<ConfiguracionSistema>();
 
 
     public DbSet<Proveedor> Proveedores => Set<Proveedor>();
@@ -237,6 +238,22 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<pruebaPagoMp.Models.Caja.NotaCredito>()
             .Property(x => x.SaldoDisponible)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Compras.Compra>()
+            .Property(x => x.Total)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Compras.DetalleCompra>()
+            .Property(x => x.CostoUnitario)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Compras.DetalleCompra>()
+            .Property(x => x.Subtotal)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Compras.FacturaProveedor>()
+            .Property(x => x.Monto)
             .HasColumnType("decimal(18,2)");
 
         modelBuilder.Entity<pruebaPagoMp.Models.Caja.Caja>()

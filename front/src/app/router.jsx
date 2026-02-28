@@ -8,7 +8,6 @@ import Register from "@/features/auth/pages/Register";
 
 // Cliente
 import Catalogo from "@/features/productos/pages/Catalogo";
-import PromocionesCliente from "@/features/productos/pages/PromocionesCliente";
 import Carrito from "@/features/carrito/pages/Carrito";
 import Checkout from "@/features/ventas/pages/Checkout";
 import MisVentas from "@/features/ventas/pages/MisVentas";
@@ -46,6 +45,7 @@ import NuevaCompra from "@/features/adminCompras/pages/NuevaCompra";
 import CompraDetalle from "@/features/adminCompras/pages/CompraDetalle";
 import SeguimientoPedidos from "@/features/adminCompras/pages/SeguimientoPedidos";
 import HistorialCompras from "@/features/adminCompras/pages/HistorialCompras";
+import PromocionesCompras from "@/features/adminCompras/pages/PromocionesCompras";
 
 // AdminGeneral
 import AdminGeneralShell from "@/features/adminGeneral/components/AdminGeneralShell";
@@ -53,7 +53,6 @@ import AdminGeneralDashboard from "@/features/adminGeneral/pages/AdminGeneralDas
 import UsuariosAdmin from "@/features/adminGeneral/pages/UsuariosAdmin";
 import UsuarioDetalle from "@/features/adminGeneral/pages/UsuarioDetalle";
 import FacturaDatosAdmin from "@/features/adminGeneral/pages/FacturaDatosAdmin";
-import Promociones from "@/features/adminGeneral/pages/Promociones";
 import CajaAdmin from "@/features/adminGeneral/pages/CajaAdmin";
 import Reportes from "@/features/adminGeneral/pages/Reportes";
 
@@ -77,7 +76,7 @@ export const router = createBrowserRouter([
             element: <RequireRole role="Cliente" />,
             children: [
               { path: "/catalogo", element: <Catalogo /> },
-              { path: "/promociones", element: <PromocionesCliente /> },
+              { path: "/promociones", element: <Navigate to="/catalogo" replace /> },
               { path: "/carrito", element: <Carrito /> },
               { path: "/checkout", element: <Checkout /> },
 
@@ -129,6 +128,7 @@ export const router = createBrowserRouter([
 
                   { path: "/compras/nueva", element: <NuevaCompra /> },
                   { path: "/compras/seguimiento", element: <SeguimientoPedidos /> },
+                  { path: "/compras/promociones", element: <PromocionesCompras /> },
                   { path: "/compras/historial", element: <HistorialCompras /> },
 
                   { path: "/compras/:id", element: <CompraDetalle /> },
@@ -148,7 +148,6 @@ export const router = createBrowserRouter([
                   { path: "/admin-general/usuarios", element: <UsuariosAdmin /> },
                   { path: "/admin-general/usuarios/:id", element: <UsuarioDetalle /> },
                   { path: "/admin-general/factura", element: <FacturaDatosAdmin /> },
-                  { path: "/admin-general/promociones", element: <Promociones /> },
                   { path: "/admin-general/caja", element: <CajaAdmin /> },
                   { path: "/admin-general/reportes", element: <Reportes /> },
                 ],

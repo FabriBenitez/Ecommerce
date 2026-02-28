@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { reporteStock, resumenCaja } from "../api/adminGeneral.api";
+import { actualizarStockMinimo, obtenerStockMinimo, reporteStock, resumenCaja } from "../api/adminGeneral.api";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 
 export default function AdminGeneralDashboard() {
   const [caja, setCaja] = useState(null);
   const [stock, setStock] = useState([]);
+  const [stockMinimo, setStockMinimo] = useState(10);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     resumenCaja().then(setCaja).catch(() => setCaja(null));
     reporteStock().then(setStock).catch(() => setStock([]));
+    obtenerStockMinimo().then(setStockMinimo).catch(() => setStockMinimo(10));
   }, []);
 
   const saldoActual = useMemo(() => (caja?.saldoActual ?? 0), [caja]);
@@ -56,6 +60,36 @@ export default function AdminGeneralDashboard() {
               <h3>Alertas de Stock Bajo</h3>
               <Link to="/admin-general/reportes" className="agNav__link isActive">Ver inventario completo</Link>
             </div>
+            <div className="agFormRow" style={{ marginBottom: 10 }}>
+              <label>Stock minimo de alerta
+                <input
+                  type="number"
+                  value={stockMinimo}
+                  onChange={(e) => setStockMinimo(Number(e.target.value || 0))}
+                />
+              </label>
+              <div style={{ display: "flex", alignItems: "end" }}>
+                <button
+                  className="agBtn"
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      setErr("");
+                      setMsg("");
+                      const res = await actualizarStockMinimo(stockMinimo);
+                      setStockMinimo(Number(res?.stockMinimo ?? stockMinimo));
+                      setMsg("Stock minimo actualizado.");
+                    } catch (e) {
+                      setErr(e?.response?.data?.error ?? "No se pudo actualizar.");
+                    }
+                  }}
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+            {msg ? <p className="agOk">{msg}</p> : null}
+            {err ? <p className="agErr">{err}</p> : null}
             <div className="agTableWrap">
               <table className="agTable">
                 <thead>
@@ -98,10 +132,6 @@ export default function AdminGeneralDashboard() {
               <Link className="agQuick" to="/admin-general/caja">
                 <div className="agQuick__icon">$</div>
                 <div><h4>Abrir Caja</h4><p>Registrar inicio de jornada</p></div>
-              </Link>
-              <Link className="agQuick" to="/admin-general/promociones">
-                <div className="agQuick__icon">%</div>
-                <div><h4>Nueva Promo</h4><p>Configurar descuentos</p></div>
               </Link>
               <Link className="agQuick" to="/admin-general/factura">
                 <div className="agQuick__icon">#</div>

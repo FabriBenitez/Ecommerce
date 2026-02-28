@@ -13,14 +13,21 @@ public class AuthService : IAuthService
     private readonly PasswordHasher _hasher;
     private readonly IJwtService _jwtService;
     private readonly SecurityLogger _securityLogger;
+    private readonly IDigitoVerificadorService _dvService;
     private string ip = "unknown";
 
-    public AuthService(ApplicationDbContext context, PasswordHasher hasher, IJwtService jwtService, SecurityLogger securityLogger)
+    public AuthService(
+        ApplicationDbContext context,
+        PasswordHasher hasher,
+        IJwtService jwtService,
+        SecurityLogger securityLogger,
+        IDigitoVerificadorService dvService)
     {
         _context = context;
         _hasher = hasher;
         _jwtService = jwtService;
         _securityLogger = securityLogger;
+        _dvService = dvService;
     }
 
     public void Register(RegisterDto dto)
@@ -38,18 +45,21 @@ public class AuthService : IAuthService
         if (_context.Usuarios.Any(u => u.Email == dto.Email))
             throw new Exception("El email ya existe");
 
-        var passwordHash = _hasher.Hash(dto.Password);
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
         var usuario = new Usuario
         {
             Email = dto.Email,
             NombreCompleto = dto.NombreCompleto,
             Dni = dto.Dni,
+            DniHash = SecurityHashing.Sha256Normalized(dto.Dni),
             Telefono = dto.telefono,
             PasswordHash = passwordHash,
             FechaCreacion = DateTime.Now,
-            DigitoVerificador = "" // se calcula en PASO 5
+            DigitoVerificador = ""
         };
+
+        _dvService.RecalcularEntidadAsync(usuario).GetAwaiter().GetResult();
 
         _context.Usuarios.Add(usuario);
         _context.SaveChanges();
@@ -63,6 +73,7 @@ public class AuthService : IAuthService
         });
 
         _context.SaveChanges();
+        _dvService.RecalcularDVVAsync("Usuarios").GetAwaiter().GetResult();
     }
 
     public string Login(LoginDto dto)
@@ -73,7 +84,7 @@ public class AuthService : IAuthService
         if (usuario == null)
             throw new Exception("Credenciales invalidas");
 
-        if (BCrypt.Net.BCrypt.Verify(dto.Password, usuario.PasswordHash))
+        if (!BCrypt.Net.BCrypt.Verify(dto.Password, usuario.PasswordHash))
             throw new Exception("Credenciales invalidas");
 
         var roles = _context.UsuarioRoles
@@ -88,7 +99,6 @@ public class AuthService : IAuthService
         _context.SaveChanges();
 
         _securityLogger.LoginOk(usuario.Id, ip);
-        _securityLogger.LoginFail(dto.Email, ip);
 
         return token;
     }
