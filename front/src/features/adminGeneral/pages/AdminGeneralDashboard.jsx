@@ -25,8 +25,7 @@ export default function AdminGeneralDashboard() {
   return (
     <>
       <section className="agPageHead">
-        <h1>Dashboard General</h1>
-        <p>Monitoreo en tiempo real del sistema y la libreria.</p>
+        <h1>Monitoreo en tiempo real del sistema y la libreria.</h1>
       </section>
 
       <section className="agSection">
@@ -58,7 +57,6 @@ export default function AdminGeneralDashboard() {
           <article className="agCard">
             <div className="agSection__head">
               <h3>Alertas de Stock Bajo</h3>
-              <Link to="/admin-general/reportes" className="agNav__link isActive">Ver inventario completo</Link>
             </div>
             <div className="agFormRow" style={{ marginBottom: 10 }}>
               <label>Stock minimo de alerta

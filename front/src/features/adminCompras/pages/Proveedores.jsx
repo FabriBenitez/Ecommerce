@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listarProveedores, crearProveedor } from "../api/adminCompras.api";
+import { confirmAction } from "@/shared/ui/sweetAlert";
 import "../styles/ComprasCommon.css";
+import "./Proveedores.css";
 
 export default function Proveedores() {
   const [proveedores, setProveedores] = useState([]);
@@ -58,7 +60,8 @@ export default function Proveedores() {
   }, [proveedores, q]);
 
   const onChange = (k) => (e) => {
-    const v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    const raw = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    const v = k === "cuit" && typeof raw === "string" ? raw.replace(/\D/g, "") : raw;
     setForm((prev) => ({ ...prev, [k]: v }));
   };
 
@@ -71,8 +74,17 @@ export default function Proveedores() {
     setOk("");
     setError("");
 
-    if (!form.razonSocial.trim()) return setError("Razón social es obligatoria.");
+    if (!form.razonSocial.trim()) return setError("Razon social es obligatoria.");
     if (!form.cuit.trim()) return setError("CUIT es obligatorio.");
+
+    const okConfirm = await confirmAction({
+      title: "Crear proveedor",
+      text: `Se creara el proveedor "${form.razonSocial.trim()}".`,
+      confirmText: "Si, crear",
+      cancelText: "Cancelar",
+      icon: "warning",
+    });
+    if (!okConfirm) return;
 
     try {
       setSaving(true);
@@ -85,7 +97,7 @@ export default function Proveedores() {
         activo: !!form.activo,
       });
 
-      setOk("Proveedor creado ✅");
+      setOk("Proveedor creado correctamente.");
       resetForm();
       setShowForm(false);
       await cargar();
@@ -102,7 +114,7 @@ export default function Proveedores() {
       <header className="cpage__head">
         <div>
           <h1 className="ctitle">Proveedores</h1>
-          <p className="cmuted">Alta, edición y acceso al detalle.</p>
+          <p className="cmuted">Alta, edicion y acceso al detalle.</p>
         </div>
 
         <div className="cactions">
@@ -118,7 +130,7 @@ export default function Proveedores() {
             <span>Buscar</span>
             <input
               className="cinput"
-              placeholder="Por razón social, CUIT o #id…"
+              placeholder="Por razon social, CUIT o #id..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -146,13 +158,13 @@ export default function Proveedores() {
 
           <form className="cform" onSubmit={onSubmit}>
             <label className="field">
-              <span>Razón social *</span>
+              <span>Razon social *</span>
               <input className="cinput" value={form.razonSocial} onChange={onChange("razonSocial")} />
             </label>
 
             <label className="field">
               <span>CUIT *</span>
-              <input className="cinput" value={form.cuit} onChange={onChange("cuit")} />
+              <input className="cinput" value={form.cuit} onChange={onChange("cuit")} inputMode="numeric" />
             </label>
 
             <label className="field">
@@ -161,7 +173,7 @@ export default function Proveedores() {
             </label>
 
             <label className="field">
-              <span>Teléfono</span>
+              <span>Telefono</span>
               <input className="cinput" value={form.telefono} onChange={onChange("telefono")} />
             </label>
 
@@ -172,7 +184,7 @@ export default function Proveedores() {
 
             <div className="formActions">
               <button className="btn btn--primary" disabled={saving}>
-                {saving ? "Guardando…" : "Crear proveedor"}
+                {saving ? "Guardando..." : "Crear proveedor"}
               </button>
               <button
                 className="btn btn--ghost"
@@ -190,30 +202,34 @@ export default function Proveedores() {
         </section>
       ) : null}
 
-      {loading ? <section className="ccard ccard__pad">Cargando…</section> : null}
+      {loading ? <section className="ccard ccard__pad">Cargando...</section> : null}
 
       {!loading ? (
         <section className="ccard">
           <div className="tableWrap">
-            <table className="ctable" style={{ minWidth: 820 }}>
+            <table className="ctable proveedoresTable" style={{ minWidth: 760 }}>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Razón social</th>
+                  <th>Razon social</th>
                   <th>CUIT</th>
                   <th>Activo</th>
-                  <th className="right">Acción</th>
+                  <th className="right">Accion</th>
                 </tr>
               </thead>
               <tbody>
                 {(filtrados ?? []).map((p) => (
                   <tr key={p.id}>
-                    <td className="mono">#{p.id}</td>
-                    <td className="strong">{p.razonSocial ?? "-"}</td>
-                    <td className="mono">{p.cuit ?? p.CUIT ?? "-"}</td>
-                    <td>{p.activo ? "Sí" : "No"}</td>
+                    <td>
+                      <div className="proveedoresTable__rs">{p.razonSocial ?? "-"}</div>
+                    </td>
+                    <td><span className="proveedoresTable__cuit">{p.cuit ?? p.CUIT ?? "-"}</span></td>
+                    <td>
+                      <span className={`proveedoresTable__estado ${p.activo ? "is-on" : "is-off"}`}>
+                        {p.activo ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
                     <td className="right">
-                      <Link className="btn btn--ghost btn--sm" to={`/compras/proveedores/${p.id}`}>
+                      <Link className="btn btn--ghost btn--sm proveedoresTable__action" to={`/compras/proveedores/${p.id}`}>
                         Ver / Editar
                       </Link>
                     </td>
@@ -222,7 +238,7 @@ export default function Proveedores() {
 
                 {(filtrados ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="emptyRow">No hay proveedores.</td>
+                    <td colSpan="4" className="emptyRow">No hay proveedores.</td>
                   </tr>
                 ) : null}
               </tbody>
@@ -233,3 +249,5 @@ export default function Proveedores() {
     </main>
   );
 }
+
+

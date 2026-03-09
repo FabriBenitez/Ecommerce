@@ -27,7 +27,11 @@ export default function ProveedorFormModal({ open, onClose, initial, onSubmit })
 
   if (!open) return null;
 
-  const set = (k) => (e) => setForm((s) => ({ ...s, [k]: e.target.value }));
+  const set = (k) => (e) => {
+    const raw = e.target.value;
+    const v = k === "cuit" ? raw.replace(/\D/g, "") : raw;
+    setForm((s) => ({ ...s, [k]: v }));
+  };
   const setBool = (k) => (e) => setForm((s) => ({ ...s, [k]: e.target.checked }));
 
   async function handleSubmit(e) {
@@ -73,7 +77,7 @@ export default function ProveedorFormModal({ open, onClose, initial, onSubmit })
 
             <label className="field">
               <span>CUIT</span>
-              <input className="cinput" value={form.cuit} onChange={set("cuit")} />
+              <input className="cinput" value={form.cuit} onChange={set("cuit")} inputMode="numeric" />
             </label>
 
             <label className="field">

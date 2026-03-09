@@ -93,9 +93,23 @@ public class VentasPresencialesController : ControllerBase
     [Authorize(Roles="AdminVentas")]
     public async Task<IActionResult> GetNotaCredito(string dni)
     {
-        var nc = await _context.NotasCredito.FirstOrDefaultAsync(x => x.ClienteDni == dni);
-        if (nc == null) return Ok(new { dni, saldoDisponible = 0m });
-        return Ok(new { dni = nc.ClienteDni, saldoDisponible = nc.SaldoDisponible });
+        var dniNormalizado = NormalizarDni(dni);
+        var saldoDisponible = await _context.NotasCredito
+            .Where(x => x.ClienteDni != null &&
+                        x.ClienteDni.Replace(".", "").Replace("-", "").Replace(" ", "") == dniNormalizado)
+            .SumAsync(x => (decimal?)x.SaldoDisponible) ?? 0m;
+
+        return Ok(new { dni = dniNormalizado, saldoDisponible });
+    }
+
+    private static string NormalizarDni(string? dni)
+    {
+        if (string.IsNullOrWhiteSpace(dni))
+            return string.Empty;
+
+        var trimmed = dni.Trim();
+        var soloDigitos = new string(trimmed.Where(char.IsDigit).ToArray());
+        return string.IsNullOrWhiteSpace(soloDigitos) ? trimmed : soloDigitos;
     }
 
 

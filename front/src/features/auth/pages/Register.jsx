@@ -10,6 +10,7 @@ export default function Register() {
   const navigate = useNavigate();
 
   const [nombreCompleto, setNombreCompleto] = useState("");
+  const [dni, setDni] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +24,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      await register({ nombreCompleto, telefono, email, password, confirmPassword });
+      await register({ nombreCompleto, dni, telefono, email, password, confirmPassword });
       navigate("/login");
     } catch (e) {
       const msg = e?.response?.data ?? e?.message ?? "No se pudo registrar.";
@@ -53,6 +54,17 @@ export default function Register() {
             </div>
 
             <div className="authForm__field">
+              <label className="authForm__label">DNI</label>
+              <input
+                className="authForm__input"
+                value={dni}
+                onChange={(e) => setDni(e.target.value)}
+                placeholder="Ej: 30111222"
+                required
+              />
+            </div>
+
+            <div className="authForm__field">
               <label className="authForm__label">Telefono</label>
               <input
                 className="authForm__input"
@@ -75,7 +87,7 @@ export default function Register() {
             </div>
 
             <div className="authForm__field">
-              <label className="authForm__label">Contrasena</label>
+              <label className="authForm__label">Contraseña</label>
               <input
                 className="authForm__input"
                 type="password"
@@ -87,7 +99,7 @@ export default function Register() {
             </div>
 
             <div className="authForm__field">
-              <label className="authForm__label">Confirmar contrasena</label>
+              <label className="authForm__label">Confirmar contraseña</label>
               <input
                 className="authForm__input"
                 type="password"

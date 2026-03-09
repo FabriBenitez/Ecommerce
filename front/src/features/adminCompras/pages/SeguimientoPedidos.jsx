@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listarCompras, confirmarCompra, listarProveedores } from "../api/adminCompras.api";
+import { confirmAction } from "@/shared/ui/sweetAlert";
 import "../styles/ComprasCommon.css";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
@@ -86,6 +87,15 @@ export default function SeguimientoPedidos() {
   }, [compras]);
 
   const onConfirmar = async (id) => {
+    const ok = await confirmAction({
+      title: "Confirmar llegada",
+      text: `Se confirmara la compra #${id} y se actualizara el stock.`,
+      confirmText: "Si, confirmar",
+      cancelText: "Cancelar",
+      icon: "warning",
+    });
+    if (!ok) return;
+
     try {
       setError("");
       setBusyId(id);

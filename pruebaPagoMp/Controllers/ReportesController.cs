@@ -35,4 +35,12 @@ public class ReportesController : ControllerBase
     {
         return Ok(await _service.ObtenerCajaAsync(fecha ?? DateTime.UtcNow));
     }
+
+    [HttpGet("ejecutivo")]
+    public async Task<IActionResult> Ejecutivo([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
+    {
+        var fechaHasta = hasta ?? DateTime.UtcNow;
+        var fechaDesde = desde ?? fechaHasta.AddDays(-30);
+        return Ok(await _service.ObtenerEjecutivoAsync(fechaDesde, fechaHasta));
+    }
 }

@@ -130,9 +130,91 @@
   color: #555;
 }
 
+.posCatalogGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.posCard {
+  display: flex;
+  flex-direction: column;
+  min-height: 430px;
+}
+
+.posCard__media {
+  height: 150px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f3f7f4;
+  margin-bottom: 10px;
+}
+
+.posCard__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.posCard__imgFallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #6f7f74;
+  font-size: 12px;
+}
+
+.posCard__title {
+  font-weight: 900;
+  line-height: 1.25;
+  min-height: 50px;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.posCard__meta {
+  color: #52645a;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.posCard__meta.isPromo {
+  color: #0a7b3b;
+}
+
+.posCard__meta--stock {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.posCard__footer {
+  margin-top: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.posCard__price {
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.posCard__btn {
+  width: 100%;
+}
+
 @media (max-width: 900px) {
   .aGrid2 {
     grid-template-columns: 1fr;
+  }
+
+  .posCatalogGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .aTable {
@@ -156,5 +238,9 @@
 
   .aSub {
     margin-bottom: 14px;
+  }
+
+  .posCatalogGrid {
+    grid-template-columns: 1fr;
   }
 }

@@ -120,7 +120,7 @@ export default function HistorialCompras() {
             <span>Buscar</span>
             <input
               className="cinput"
-              placeholder="Por proveedor o #id…"
+              placeholder="Por proveedor"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -137,8 +137,7 @@ export default function HistorialCompras() {
             <table className="ctable">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Fecha</th>
+                  <th>Fecha y hora</th>
                   <th>Proveedor</th>
                   <th>Estado</th>
                   <th className="right">Total</th>
@@ -148,7 +147,6 @@ export default function HistorialCompras() {
               <tbody>
                 {(filtradas ?? []).map((c) => (
                   <tr key={c.id}>
-                    <td className="mono">#{c.id}</td>
                     <td>{c.fecha ? new Date(c.fecha).toLocaleString("es-AR") : "-"}</td>
                     <td>{proveedorText(c.proveedor)}</td>
                     <td>{estadoCompraLabel(c.estadoCompra)}</td>

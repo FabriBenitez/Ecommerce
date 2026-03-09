@@ -13,6 +13,25 @@ export default function Carrito() {
   const [error, setError] = useState("");
 
   const items = carrito?.items ?? carrito?.carritoItems ?? [];
+  const sinDatosIniciales = !carrito && !!error;
+
+  const resolverMensajeError = (err, fallback) => {
+    const raw =
+      err?.response?.data?.error ??
+      err?.response?.data?.title ??
+      (typeof err?.response?.data === "string" ? err.response.data : "") ??
+      err?.message ??
+      "";
+
+    const msg = String(raw).toLowerCase();
+    if (msg.includes("stock")) {
+      return "No hay mas stock disponible para esa cantidad.";
+    }
+    if (msg.includes("cantidad")) {
+      return "La cantidad solicitada no es valida.";
+    }
+    return fallback;
+  };
 
   const total = useMemo(() => {
     return items.reduce((acc, it) => {
@@ -44,9 +63,10 @@ export default function Carrito() {
     try {
       setBusyItemId(itemId);
       await carritosApi.actualizarCantidad(itemId, { cantidad: cantidadActual + 1 });
+      setError("");
       await cargar();
-    } catch {
-      setError("No se pudo actualizar la cantidad.");
+    } catch (err) {
+      setError(resolverMensajeError(err, "No se pudo actualizar la cantidad."));
     } finally {
       setBusyItemId(null);
     }
@@ -57,9 +77,10 @@ export default function Carrito() {
       if (cantidadActual <= 1) return;
       setBusyItemId(itemId);
       await carritosApi.actualizarCantidad(itemId, { cantidad: cantidadActual - 1 });
+      setError("");
       await cargar();
-    } catch {
-      setError("No se pudo actualizar la cantidad.");
+    } catch (err) {
+      setError(resolverMensajeError(err, "No se pudo actualizar la cantidad."));
     } finally {
       setBusyItemId(null);
     }
@@ -69,9 +90,10 @@ export default function Carrito() {
     try {
       setBusyItemId(itemId);
       await carritosApi.eliminarItem(itemId);
+      setError("");
       await cargar();
-    } catch {
-      setError("No se pudo eliminar el item.");
+    } catch (err) {
+      setError(resolverMensajeError(err, "No se pudo eliminar el item."));
     } finally {
       setBusyItemId(null);
     }
@@ -100,10 +122,18 @@ export default function Carrito() {
       {loading ? <p className="cartState">Cargando carrito…</p> : null}
       {error ? <p className="cartState cartState--error">{error}</p> : null}
 
-      {!loading && !error ? (
+      {!loading ? (
         <div className="cartLayout">
           <section className="cartList">
-            {items.length === 0 ? (
+            {sinDatosIniciales ? (
+              <div className="cartEmpty">
+                <p className="cartEmpty__title">No pudimos cargar tu carrito.</p>
+                <p className="cartEmpty__text">Intenta nuevamente en unos segundos o segui comprando.</p>
+                <Link className="cartEmpty__btn" to="/catalogo">
+                  Ir al catalogo
+                </Link>
+              </div>
+            ) : items.length === 0 ? (
               <div className="cartEmpty">
                 <p className="cartEmpty__title">Tu carrito está vacío 🧾</p>
                 <p className="cartEmpty__text">Volvé al catálogo y agregá productos.</p>

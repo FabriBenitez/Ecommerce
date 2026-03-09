@@ -1,0 +1,77 @@
+.ncSection {
+  border: 1px solid #e7edf5;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.ncSection--provider {
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.ncProviderGrid {
+  align-items: end;
+}
+
+.ncActions {
+  justify-content: flex-start;
+}
+
+.ncSection--catalog {
+  border-color: #dbe7f3;
+  box-shadow: 0 10px 24px rgba(20, 58, 94, 0.06);
+}
+
+.ncTitleStep {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+
+.ncSubStep {
+  margin-bottom: 14px;
+  max-width: 900px;
+}
+
+.ncCatalogGrid {
+  margin-bottom: 10px;
+}
+
+.ncCatalogActions {
+  margin-bottom: 16px;
+}
+
+.ncImportGrid {
+  align-items: end;
+}
+
+.ncBtnGhost {
+  border-radius: 14px;
+  border-color: #d7dfeb;
+  background: #f9fbff;
+}
+
+.ncBtnGhost:hover {
+  border-color: #b7c6dd;
+  background: #f2f7ff;
+}
+
+.ncBtnPrimary {
+  border-radius: 14px;
+  height: 42px;
+  min-width: 280px;
+}
+
+.ncHint {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .ncTitleStep {
+    font-size: 22px;
+  }
+
+  .ncBtnPrimary {
+    min-width: 0;
+    width: 100%;
+  }
+}

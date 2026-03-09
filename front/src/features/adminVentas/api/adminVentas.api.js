@@ -36,3 +36,38 @@ export async function notaCreditoPorDni(dni) {
   const { data } = await http.get(`/api/notas-credito/${dni}`);
   return data;
 }
+
+export async function crearReservaPresencial(payload) {
+  const { data } = await http.post("/api/reservas-presenciales", payload);
+  return data;
+}
+
+export async function listarReservas(params) {
+  const { data } = await http.get("/api/reservas-presenciales", { params });
+  return data ?? [];
+}
+
+export async function resumenLibrosSenia(params) {
+  const { data } = await http.get("/api/reservas-presenciales/libros-resumen", { params });
+  return data ?? [];
+}
+
+export async function detalleReserva(reservaId) {
+  const { data } = await http.get(`/api/reservas-presenciales/${reservaId}`);
+  return data;
+}
+
+export async function completarPagoReserva(reservaId, payload) {
+  const { data } = await http.post(`/api/reservas-presenciales/${reservaId}/completar-pago`, payload);
+  return data;
+}
+
+export async function cancelarReserva(reservaId, motivo) {
+  const { data } = await http.post(`/api/reservas-presenciales/${reservaId}/cancelar`, { motivo });
+  return data;
+}
+
+export async function vencerReservasExpiradas() {
+  const { data } = await http.post("/api/reservas-presenciales/vencer-expiradas");
+  return data;
+}

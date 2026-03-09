@@ -64,8 +64,6 @@ export default function MisVentas() {
       <header className="misVentasHeader">
         <h1 className="misVentasHeader__title">Seguimiento de mis compras</h1>
         <p className="misVentasHeader__subtitle">Ves cada compra y el estado actual de retiro.</p>
-        <Link className="misVentasLink" to="/promociones">Ver promociones activas</Link>
-        <br />
         <Link className="misVentasLink" to="/mis-retiros">Ver estado de retiro</Link>
       </header>
 

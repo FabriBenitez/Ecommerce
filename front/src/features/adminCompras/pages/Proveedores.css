@@ -1,0 +1,86 @@
+.proveedoresTable {
+  table-layout: fixed;
+}
+
+.proveedoresTable tbody td {
+  background: #ffffff;
+  border-top: 1px solid #edf1f6;
+  border-bottom: 1px solid #edf1f6;
+}
+
+.proveedoresTable tbody tr td:first-child {
+  border-left: 1px solid #edf1f6;
+}
+
+.proveedoresTable tbody tr td:last-child {
+  border-right: 1px solid #edf1f6;
+}
+
+.proveedoresTable th:nth-child(1),
+.proveedoresTable td:nth-child(1) {
+  width: 38%;
+}
+
+.proveedoresTable th:nth-child(2),
+.proveedoresTable td:nth-child(2) {
+  width: 28%;
+}
+
+.proveedoresTable th:nth-child(3),
+.proveedoresTable td:nth-child(3) {
+  width: 16%;
+}
+
+.proveedoresTable th:nth-child(4),
+.proveedoresTable td:nth-child(4) {
+  width: 18%;
+}
+
+.proveedoresTable__rs {
+  font-weight: 900;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.proveedoresTable__cuit {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: #0f172a;
+}
+
+.proveedoresTable__estado {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid #dbe4ef;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.proveedoresTable__estado.is-on {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.proveedoresTable__estado.is-off {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.proveedoresTable__action {
+  min-width: 122px;
+}
+
+@media (max-width: 900px) {
+  .proveedoresTable {
+    min-width: 680px !important;
+  }
+}

@@ -73,7 +73,8 @@ export default function ProveedorDetalle() {
   }, [proveedorId]);
 
   const onChange = (k) => (e) => {
-    const v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    const raw = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    const v = k === "cuit" && typeof raw === "string" ? raw.replace(/\D/g, "") : raw;
     setForm((prev) => ({ ...prev, [k]: v }));
   };
 
@@ -155,7 +156,7 @@ export default function ProveedorDetalle() {
 
             <label className="field">
               <span>CUIT *</span>
-              <input className="cinput" value={form.cuit} onChange={onChange("cuit")} />
+              <input className="cinput" value={form.cuit} onChange={onChange("cuit")} inputMode="numeric" />
             </label>
 
             <label className="field">

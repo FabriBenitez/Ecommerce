@@ -22,18 +22,52 @@ export async function crearProducto(payload) {
   const form = new FormData();
   form.append("nombre", payload.nombre ?? "");
   form.append("descripcion", payload.descripcion ?? "");
+  form.append("editorial", payload.editorial ?? "");
   form.append("precio", String(payload.precio ?? 0));
   form.append("stock", String(payload.stock ?? 0));
+  if (payload.proveedorId) form.append("proveedorId", String(payload.proveedorId));
   if (payload.imagenFile) form.append("imagen", payload.imagenFile);
   const { data } = await http.post("/api/productos", form);
   return data;
 }
 
-export async function importarProductosCsv(file) {
+export async function importarProductosCsv(file, proveedorId) {
   const form = new FormData();
   form.append("file", file);
+  if (proveedorId) form.append("proveedorId", String(proveedorId));
   const { data } = await http.post("/api/productos/import-csv", form);
   return data;
+}
+
+export async function actualizarProducto(productoId, payload) {
+  const form = new FormData();
+  form.append("nombre", payload.nombre ?? "");
+  form.append("descripcion", payload.descripcion ?? "");
+  form.append("editorial", payload.editorial ?? "");
+  form.append("precio", String(payload.precio ?? 0));
+  form.append("stock", String(payload.stock ?? 0));
+  if (payload.proveedorId) form.append("proveedorId", String(payload.proveedorId));
+  if (payload.imagenFile) form.append("imagen", payload.imagenFile);
+  const { data } = await http.put(`/api/productos/${productoId}`, form);
+  return data;
+}
+
+export async function eliminarProducto(productoId) {
+  try {
+    const { data } = await http.delete(`/api/productos/${productoId}`);
+    return data;
+  } catch (e) {
+    const status = e?.response?.status;
+    const backendError = e?.response?.data?.error;
+
+    if (status === 404 && backendError) {
+      throw new Error(backendError);
+    }
+    if (status === 404) {
+      throw new Error("El endpoint de eliminacion no esta disponible en la API actual. Reinicia/actualiza el backend.");
+    }
+    throw e;
+  }
 }
 
 // Proveedores
@@ -57,6 +91,51 @@ export async function actualizarProveedor(id, payload) {
 export async function proveedorDetalle(id) {
   const { data } = await http.get(`/api/proveedores/${id}`);
   return data;
+}
+
+export async function listarProductosProveedor(proveedorId) {
+  try {
+    const { data } = await http.get(`/api/proveedores/${proveedorId}/productos`);
+    return data ?? [];
+  } catch (e) {
+    if (e?.response?.status === 404 || e?.response?.status === 500) {
+      // Compatibilidad temporal: backend sin endpoints de catalogo por proveedor.
+      const fallback = await listarProductos();
+      return (fallback ?? []).map((p) => ({
+        productoId: p.id,
+        nombre: p.nombre,
+        stockActual: p.stock ?? 0,
+        costoUnitario: Number(p.precio ?? 0),
+      }));
+    }
+    throw e;
+  }
+}
+
+export async function upsertProductoProveedor(proveedorId, payload) {
+  try {
+    const { data } = await http.post(`/api/proveedores/${proveedorId}/productos`, payload);
+    return data ?? null;
+  } catch (e) {
+    if (e?.response?.status === 404) {
+      throw new Error("El backend no tiene habilitado el catalogo por proveedor. Reinicia y actualiza la API.");
+    }
+    throw e;
+  }
+}
+
+export async function importarProductosProveedor(proveedorId, file) {
+  const form = new FormData();
+  form.append("file", file);
+  try {
+    const { data } = await http.post(`/api/proveedores/${proveedorId}/productos/import`, form);
+    return data;
+  } catch (e) {
+    if (e?.response?.status === 404) {
+      throw new Error("El backend no tiene habilitada la importacion de catalogo por proveedor. Reinicia y actualiza la API.");
+    }
+    throw e;
+  }
 }
 
 // Compras
@@ -122,7 +201,23 @@ export async function desactivarPromocionPorProducto(productoId) {
   return data;
 }
 
+export async function desactivarPromocionPorEditorial(editorial) {
+  const { data } = await http.delete("/api/promociones/by-editorial", { params: { editorial } });
+  return data;
+}
+
 export async function desactivarPromocionPorGenero(genero) {
   const { data } = await http.delete("/api/promociones/by-genero", { params: { genero } });
   return data;
+}
+
+// Pedidos por seña
+export async function listarPedidosSenia() {
+  const { data } = await http.get("/api/pedidos-senia");
+  return data ?? [];
+}
+
+export async function actualizarEstadoPedidoSenia(id, estado) {
+  const { data } = await http.put(`/api/pedidos-senia/${id}/estado`, { estado });
+  return data ?? null;
 }

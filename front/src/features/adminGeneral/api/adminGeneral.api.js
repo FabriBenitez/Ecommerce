@@ -35,6 +35,11 @@ export async function desactivarPromocionPorProducto(productoId) {
   return data;
 }
 
+export async function desactivarPromocionPorEditorial(editorial) {
+  const { data } = await http.delete("/api/promociones/by-editorial", { params: { editorial } });
+  return data;
+}
+
 export async function desactivarPromocionPorGenero(genero) {
   const { data } = await http.delete("/api/promociones/by-genero", { params: { genero } });
   return data;
@@ -82,6 +87,11 @@ export async function reporteStock() {
 
 export async function reporteCaja(params) {
   const { data } = await http.get("/api/reportes/caja", { params });
+  return data;
+}
+
+export async function reporteEjecutivo(params) {
+  const { data } = await http.get("/api/reportes/ejecutivo", { params });
   return data;
 }
 

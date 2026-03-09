@@ -8,5 +8,6 @@ public interface IPromocionService
     Task<List<PromocionListDto>> ListarAsync(bool? activas);
     Task DesactivarAsync(int id);
     Task<int> DesactivarPorProductoAsync(int productoId);
+    Task<int> DesactivarPorEditorialAsync(string editorial);
     Task<int> DesactivarPorGeneroAsync(string genero);
 }

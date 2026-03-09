@@ -1,6 +1,6 @@
 import "./ProductCard.css";
 
-export default function ProductCard({ producto, onAgregar }) {
+export default function ProductCard({ producto, onAgregar, onVerDetalle }) {
   const {
     id,
     nombre,
@@ -94,14 +94,23 @@ export default function ProductCard({ producto, onAgregar }) {
             <span className="productCard__currency"> ARS</span>
           </div>
 
-          <button
-            className="productCard__btn"
-            disabled={agotado}
-            onClick={() => onAgregar?.(id)}
-            type="button"
-          >
-            {agotado ? "Agotado" : "Agregar"}
-          </button>
+          <div className="productCard__actions">
+            <button
+              className="productCard__btn productCard__btn--ghost"
+              onClick={() => onVerDetalle?.(producto)}
+              type="button"
+            >
+              Ver
+            </button>
+            <button
+              className="productCard__btn"
+              disabled={agotado}
+              onClick={() => onAgregar?.(id)}
+              type="button"
+            >
+              {agotado ? "Agotado" : "Agregar"}
+            </button>
+          </div>
         </div>
       </div>
     </article>

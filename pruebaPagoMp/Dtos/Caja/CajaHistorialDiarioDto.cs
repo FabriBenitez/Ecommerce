@@ -10,6 +10,9 @@ public class CajaHistorialDiarioDto
     public decimal SaldoInicial { get; set; }
     public decimal Ingresos { get; set; }
     public decimal Egresos { get; set; }
+    public decimal TotalCompras { get; set; }
+    public decimal TotalNotasCredito { get; set; }
+    public int CantidadNotasCredito { get; set; }
     public decimal SaldoEsperado { get; set; }
     public decimal? SaldoFinal { get; set; }
     public decimal? DiferenciaCierre { get; set; }

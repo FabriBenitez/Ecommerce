@@ -49,7 +49,7 @@ export default function Login() {
       <div className="authPage__container">
         <AuthCard
           title="Iniciar sesion"
-          subtitle="Ingresa con tu email y contrasena para comprar y ver tus ventas."
+          subtitle="Ingresa con tu email y contraseña para comprar y ver tus ventas."
         >
           <LoginForm onSubmit={handleLogin} isLoading={loading} error={error} />
         </AuthCard>

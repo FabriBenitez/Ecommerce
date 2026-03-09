@@ -7,4 +7,5 @@ public interface IReportesService
     Task<ReporteVentasDto> ObtenerVentasAsync(DateTime desde, DateTime hasta);
     Task<List<ReporteStockDto>> ObtenerStockAsync();
     Task<ReporteCajaDto> ObtenerCajaAsync(DateTime fecha);
+    Task<ReporteEjecutivoDto> ObtenerEjecutivoAsync(DateTime desde, DateTime hasta);
 }

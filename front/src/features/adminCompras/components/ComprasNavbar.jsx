@@ -48,26 +48,13 @@ export default function ComprasNavbar() {
 
           <div className="cnav__brandWrap">
             <NavLink to="/compras" className="cnav__brand">
-              AdminCompras
+              Administrador Compras
             </NavLink>
-            <span className="cnav__roleTag">Abastecimiento</span>
           </div>
 
-          <div className="cnav__right">
-            <span className="cnav__user" title={email}>
-              {email}
-            </span>
-
-            <button className="cbtn cbtn--primary cnav__logoutTop" onClick={handleLogout}>
-              Cerrar sesion
-            </button>
-          </div>
-        </div>
-
-        <div className="cnav__linksRow">
           <nav className="cnav__links" aria-label="Navegacion Admin Compras">
             <NavLink to="/compras" className={linkClass} end>
-              Dashboard
+              Inicio
             </NavLink>
             <NavLink to="/compras/inventario" className={linkClass}>
               Inventario
@@ -78,6 +65,9 @@ export default function ComprasNavbar() {
             <NavLink to="/compras/seguimiento" className={linkClass}>
               Compras
             </NavLink>
+            <NavLink to="/compras/pedidos-senia" className={linkClass}>
+              Pedidos seña
+            </NavLink>
             <NavLink to="/compras/promociones" className={linkClass}>
               Promociones
             </NavLink>
@@ -85,6 +75,16 @@ export default function ComprasNavbar() {
               Historial
             </NavLink>
           </nav>
+
+          <div className="cnav__right">
+            <span className="cnav__user" title={email}>
+              {email}
+            </span>
+
+            <button className="cbtn cbtn--primary cnav__logoutTop" onClick={handleLogout}>
+              Cerrar sesion
+            </button>
+          </div>
         </div>
       </div>
 
@@ -101,6 +101,9 @@ export default function ComprasNavbar() {
           </NavLink>
           <NavLink to="/compras/seguimiento" className={linkClass} onClick={() => setOpen(false)}>
             Compras
+          </NavLink>
+          <NavLink to="/compras/pedidos-senia" className={linkClass} onClick={() => setOpen(false)}>
+            Pedidos seña
           </NavLink>
           <NavLink to="/compras/promociones" className={linkClass} onClick={() => setOpen(false)}>
             Promociones

@@ -27,17 +27,14 @@ export default function AdminNavbar() {
     <header className="aNav">
       <div className="aNav__inner">
         <div className="aNav__brand" onClick={() => navigate("/admin")} role="button" tabIndex={0}>
-          <span className="aNav__dot" /> AdminVentas
-        </div>
-
-        <div className="aNav__searchWrap">
-          <input className="aNav__search" placeholder="Buscar pedidos, libros..." />
+          <span className="aNav__dot" /> Administrador Ventas
         </div>
 
         <nav className="aNav__links" aria-label="Admin">
-          <NavLink to="/admin" className={({ isActive }) => cx("aNav__link", isActive && "isActive")}>Dashboard</NavLink>
+          <NavLink to="/admin" className={({ isActive }) => cx("aNav__link", isActive && "isActive")}>Inicio</NavLink>
           <NavLink to="/admin/retiros" className={({ isActive }) => cx("aNav__link", isActive && "isActive")}>Pedidos retiro</NavLink>
           <NavLink to="/admin/pos" className={({ isActive }) => cx("aNav__link", isActive && "isActive")}>Mostrador</NavLink>
+          <NavLink to="/admin/reservas" className={({ isActive }) => cx("aNav__link", isActive && "isActive")}>Señas</NavLink>
           <NavLink to="/admin/facturas" className={({ isActive }) => cx("aNav__link", isActive && "isActive")}>Facturas</NavLink>
         </nav>
 

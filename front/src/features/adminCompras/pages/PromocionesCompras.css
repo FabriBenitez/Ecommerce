@@ -1,3 +1,43 @@
+.promoCreateSection {
+  display: grid;
+  gap: 12px;
+}
+
+.promoCreateGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.promoCreateCard {
+  border: 1px solid #dbe3ee;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 14px;
+}
+
+.promoCreateTitle {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.promoInfoBox {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+  border-radius: 10px;
+  padding: 10px;
+  color: #1e293b;
+}
+
+.promoInfoBox strong {
+  color: #0f172a;
+}
+
 .promoLoadedHead {
   display: flex;
   align-items: center;
@@ -40,6 +80,21 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+}
+
+.promoCard__titleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.promoCard__thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #dbe3ee;
+  background: #f8fafc;
 }
 
 .promoCard__name {
@@ -101,6 +156,14 @@
 }
 
 @media (max-width: 760px) {
+  .promoCreateGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .promoCreateTitle {
+    font-size: 19px;
+  }
+
   .promoLoadedTitle {
     font-size: 19px;
   }

@@ -18,11 +18,21 @@ public class PromocionService : IPromocionService
     {
         if (!dto.ProductoId.HasValue && string.IsNullOrWhiteSpace(dto.Genero))
             throw new InvalidOperationException("Debe indicar Libro (ProductoId) o Genero.");
-        if ((!dto.PorcentajeDescuento.HasValue || dto.PorcentajeDescuento.Value <= 0m)
-            && (!dto.MontoDescuento.HasValue || dto.MontoDescuento.Value <= 0m))
-        {
-            throw new InvalidOperationException("Debe indicar un descuento valido (porcentaje o monto fijo).");
-        }
+        var porcentaje = dto.PorcentajeDescuento;
+        var monto = dto.MontoDescuento;
+        var tienePorcentaje = porcentaje.HasValue && porcentaje.Value > 0m;
+        var tieneMonto = monto.HasValue && monto.Value > 0m;
+
+        if (!tienePorcentaje && !tieneMonto)
+            throw new InvalidOperationException("Debe indicar un descuento valido mayor a 0 (porcentaje o monto fijo).");
+        if (tienePorcentaje && tieneMonto)
+            throw new InvalidOperationException("Debe elegir solo un tipo de descuento: porcentaje o monto fijo.");
+        if (porcentaje.HasValue && porcentaje.Value > 100m)
+            throw new InvalidOperationException("El porcentaje no puede ser mayor a 100.");
+        if (porcentaje.HasValue && porcentaje.Value <= 0m)
+            throw new InvalidOperationException("El porcentaje debe ser mayor a 0.");
+        if (monto.HasValue && monto.Value <= 0m)
+            throw new InvalidOperationException("El monto fijo debe ser mayor a 0.");
 
         var fechaInicio = dto.FechaInicio.Date;
         var fechaFin = dto.FechaFin.Date.AddDays(1).AddTicks(-1);
@@ -34,8 +44,17 @@ public class PromocionService : IPromocionService
             if (!existeProducto) throw new InvalidOperationException("El producto seleccionado no existe.");
         }
 
+        var productoNombre = dto.ProductoId.HasValue
+            ? await _context.Productos
+                .Where(p => p.Id == dto.ProductoId.Value)
+                .Select(p => p.Nombre)
+                .FirstOrDefaultAsync()
+            : null;
+
         var nombre = string.IsNullOrWhiteSpace(dto.Nombre)
-            ? (dto.ProductoId.HasValue ? $"Promo libro #{dto.ProductoId.Value}" : $"Promo genero {dto.Genero!.Trim()}")
+            ? (dto.ProductoId.HasValue
+                ? (string.IsNullOrWhiteSpace(productoNombre) ? "Promo libro" : productoNombre)
+                : $"Promo genero {dto.Genero!.Trim()}")
             : dto.Nombre.Trim();
 
         var promo = new Promocion
@@ -68,12 +87,20 @@ public class PromocionService : IPromocionService
             .Select(p => new PromocionListDto
             {
                 Id = p.Id,
-                Nombre = p.Nombre,
+                Nombre = p.ProductoId != null
+                    ? (_context.Productos.Where(prod => prod.Id == p.ProductoId).Select(prod => prod.Nombre).FirstOrDefault() ?? p.Nombre)
+                    : p.Nombre,
                 ProductoId = p.ProductoId,
                 Genero = p.Genero,
                 ProductoNombre = p.ProductoId == null
                     ? null
                     : _context.Productos.Where(prod => prod.Id == p.ProductoId).Select(prod => prod.Nombre).FirstOrDefault(),
+                ProductoImagenUrl = p.ProductoId == null
+                    ? null
+                    : _context.Productos.Where(prod => prod.Id == p.ProductoId).Select(prod => prod.ImagenUrl).FirstOrDefault(),
+                ProductoEditorial = p.ProductoId == null
+                    ? null
+                    : _context.Productos.Where(prod => prod.Id == p.ProductoId).Select(prod => prod.Editorial).FirstOrDefault(),
                 FechaInicio = p.FechaInicio,
                 FechaFin = p.FechaFin,
                 Activa = p.Activa
@@ -93,6 +120,28 @@ public class PromocionService : IPromocionService
     {
         var promos = await _context.Promociones
             .Where(x => x.Activa && x.ProductoId == productoId)
+            .ToListAsync();
+
+        if (promos.Count == 0) return 0;
+        promos.ForEach(x => x.Activa = false);
+        await _context.SaveChangesAsync();
+        return promos.Count;
+    }
+
+    public async Task<int> DesactivarPorEditorialAsync(string editorial)
+    {
+        if (string.IsNullOrWhiteSpace(editorial)) throw new InvalidOperationException("Editorial requerida.");
+        var edNorm = editorial.Trim().ToLower();
+
+        var productoIds = await _context.Productos
+            .Where(p => p.Editorial != null && p.Editorial.ToLower() == edNorm)
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        if (productoIds.Count == 0) return 0;
+
+        var promos = await _context.Promociones
+            .Where(x => x.Activa && x.ProductoId != null && productoIds.Contains(x.ProductoId.Value))
             .ToListAsync();
 
         if (promos.Count == 0) return 0;

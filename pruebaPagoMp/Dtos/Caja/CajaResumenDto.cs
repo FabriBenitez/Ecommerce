@@ -7,6 +7,9 @@ public class CajaResumenDto
     public decimal SaldoInicial { get; set; }
     public decimal Ingresos { get; set; }
     public decimal Egresos { get; set; }
+    public decimal TotalCompras { get; set; }
+    public decimal TotalNotasCredito { get; set; }
+    public int CantidadNotasCredito { get; set; }
     public decimal SaldoActual { get; set; }
     public DateTime? FechaApertura { get; set; }
     public DateTime? FechaCierre { get; set; }

@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using pruebaPagoMp.Data;
-using pruebaPagoMp.Models.Compras.Enums; // ajustá namespace si tu EstadoCompra está en otro
+using pruebaPagoMp.Models.Compras.Enums;
+using pruebaPagoMp.Models.Ventas.Enums;
 
 namespace pruebaPagoMp.Controllers;
 
@@ -30,17 +31,23 @@ public class AdminComprasDashboardController : ControllerBase
                 .FirstOrDefaultAsync() ?? 10;
         }
 
-        // 1) Stock bajo
         var stockBajoCount = await _context.Productos
             .AsNoTracking()
-            .CountAsync(p => p.Stock < stockMinimo.Value);
+            .CountAsync(p =>
+                !p.EsTemporalSenia &&
+                p.Stock - (
+                    _context.ReservaItems
+                        .Where(ri =>
+                            ri.ProductoId == p.Id
+                            && !ri.EsAConseguir
+                            && ri.Reserva.Estado == EstadoReserva.Senada)
+                        .Sum(ri => (int?)ri.Cantidad) ?? 0
+                ) < stockMinimo.Value);
 
-        // 2) Compras pendientes
         var comprasPendientesCount = await _context.Compras
             .AsNoTracking()
             .CountAsync(c => c.EstadoCompra == EstadoCompra.Pendiente);
 
-        // 3) Últimas 5 compras confirmadas (para tabla del dashboard)
         var ultimasConfirmadas = await _context.Compras
             .AsNoTracking()
             .Include(c => c.Proveedor)

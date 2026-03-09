@@ -136,12 +136,10 @@ export default function VentaDetalle() {
             </div>
           </section>
 
-          <section className="itemsCard">
-            <h2 className="sectionTitle">Pagos</h2>
+          {(venta.pagos?.length ?? 0) > 0 ? (
+            <section className="itemsCard">
+              <h2 className="sectionTitle">Pagos</h2>
 
-            {(venta.pagos?.length ?? 0) === 0 ? (
-              <p className="state">Sin pagos registrados.</p>
-            ) : (
               <div className="tableWrap">
                 <table className="itemsTable">
                   <thead>
@@ -162,8 +160,8 @@ export default function VentaDetalle() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </section>
+            </section>
+          ) : null}
 
           <section className="entregaCard">
   <h2 className="sectionTitle">Retiro presencial</h2>

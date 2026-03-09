@@ -2,7 +2,7 @@ namespace pruebaPagoMp.Dtos.Promociones;
 
 public class PromocionCreateDto
 {
-    public string Nombre { get; set; } = null!;
+    public string? Nombre { get; set; }
     public string? Descripcion { get; set; }
     public int? ProductoId { get; set; }
     public string? Genero { get; set; }

@@ -2,6 +2,7 @@ import { useMemo, useEffect, useState } from "react";
 import { abrirCaja, cerrarCaja, historialCajaDiaria, movimientosCaja, reporteCaja, reporteVentas, resumenCaja } from "../api/adminGeneral.api";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
+const COMPRA_PROVEEDOR_PREFIX = "COMPRA_PROVEEDOR:";
 
 function getErrorMessage(error, fallback) {
   const data = error?.response?.data;
@@ -23,6 +24,16 @@ function dayKey(value) {
   return new Date(value).toISOString().slice(0, 10);
 }
 
+function isCompraInformativa(concepto) {
+  return String(concepto ?? "").toUpperCase().startsWith(COMPRA_PROVEEDOR_PREFIX);
+}
+
+function formatConcepto(concepto) {
+  const raw = String(concepto ?? "");
+  if (!isCompraInformativa(raw)) return raw;
+  return raw.replace(/^COMPRA_PROVEEDOR:\s*/i, "Compras - ");
+}
+
 function buildDailyFromMovimientos(movs, dias) {
   const hoy = new Date();
   const keys = [];
@@ -32,15 +43,17 @@ function buildDailyFromMovimientos(movs, dias) {
     keys.push(dayKey(d));
   }
 
-  const map = new Map(keys.map((k) => [k, { fecha: k, ingresos: 0, egresos: 0, movimientos: 0 }]));
+  const map = new Map(keys.map((k) => [k, { fecha: k, ingresos: 0, egresos: 0, compras: 0, cantidadNotasCredito: 0, movimientos: 0 }]));
 
   for (const m of movs ?? []) {
     const k = dayKey(m.fecha);
     const row = map.get(k);
     if (!row) continue;
-    const monto = Number(m.monto ?? 0);
-    if (Number(m.tipo) === 1) row.ingresos += monto;
-    else row.egresos += monto;
+    if (!isCompraInformativa(m.concepto)) {
+      const monto = Number(m.monto ?? 0);
+      if (Number(m.tipo) === 1) row.ingresos += monto;
+      else row.egresos += monto;
+    }
     row.movimientos += 1;
   }
 
@@ -56,6 +69,9 @@ function buildDailyFromMovimientos(movs, dias) {
         saldoInicial: 0,
         ingresos: r.ingresos,
         egresos: r.egresos,
+        totalCompras: r.compras,
+        totalNotasCredito: 0,
+        cantidadNotasCredito: r.cantidadNotasCredito,
         saldoEsperado: r.ingresos - r.egresos,
         saldoFinal: null,
         diferenciaCierre: null,
@@ -68,7 +84,8 @@ function buildDailyFromMovimientos(movs, dias) {
 export default function CajaAdmin() {
   const [resumen, setResumen] = useState(null);
   const [movimientos, setMovimientos] = useState([]);
-  const [monto, setMonto] = useState("");
+  const [montoApertura, setMontoApertura] = useState("");
+  const [montoCierre, setMontoCierre] = useState("");
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
   const [diario, setDiario] = useState(null);
@@ -132,7 +149,8 @@ export default function CajaAdmin() {
       cajas: 0,
       ingresos: 0,
       egresos: 0,
-      neto: 0,
+      compras: 0,
+      cantidadNotasCredito: 0,
       movimientos: 0,
     }));
 
@@ -144,10 +162,12 @@ export default function CajaAdmin() {
       row.cajas += 1;
       row.ingresos += Number(caja.ingresos ?? 0);
       row.egresos += Number(caja.egresos ?? 0);
+      row.compras += Number(caja.totalCompras ?? 0);
+      row.cantidadNotasCredito += Number(caja.cantidadNotasCredito ?? 0);
       row.movimientos += Number(caja.cantidadMovimientos ?? 0);
     }
 
-    return base.map((r) => ({ ...r, neto: r.ingresos - r.egresos }));
+    return base;
   }, [historialSemanal]);
 
   useEffect(() => {
@@ -162,9 +182,9 @@ export default function CajaAdmin() {
     setErr("");
     setMsg("");
     try {
-      await abrirCaja({ saldoInicial: Number(monto || 0), observaciones: "Apertura desde panel AdminGeneral" });
+      await abrirCaja({ saldoInicial: Number(montoApertura || 0), observaciones: "Apertura desde panel AdminGeneral" });
       setMsg("Caja abierta.");
-      setMonto("");
+      setMontoApertura("");
       await cargar();
     } catch (error) {
       setErr(getErrorMessage(error, "No se pudo abrir caja."));
@@ -175,9 +195,9 @@ export default function CajaAdmin() {
     setErr("");
     setMsg("");
     try {
-      await cerrarCaja({ saldoFinal: Number(monto || 0), observaciones: "Cierre desde panel AdminGeneral" });
+      await cerrarCaja({ saldoFinal: Number(montoCierre || 0), observaciones: "Cierre desde panel AdminGeneral" });
       setMsg("Caja cerrada.");
-      setMonto("");
+      setMontoCierre("");
       await cargar();
     } catch (error) {
       setErr(getErrorMessage(error, "No se pudo cerrar caja."));
@@ -188,7 +208,7 @@ export default function CajaAdmin() {
     <>
       <section className="agPageHead">
         <h1>Control de Caja</h1>
-        <p>Gestion administrativa diaria de movimientos e ingresos.</p>
+        <p>Gestion administrativa diaria de movimientos, ingresos y compras.</p>
       </section>
 
       <section className="agSection agGrid agGrid--2">
@@ -199,12 +219,56 @@ export default function CajaAdmin() {
             <div className="agKpi agKpi--ok"><label>Balance actual</label><strong>{money.format(resumen?.saldoActual ?? 0)}</strong></div>
           </div>
 
-          <div className="agFormRow">
-            <label>Monto para apertura/cierre<input value={monto} onChange={(e) => setMonto(e.target.value)} /></label>
-            <div style={{ display: "flex", gap: 8, alignItems: "end" }}>
-              <button className="agBtn" onClick={onAbrir} type="button">Abrir Caja</button>
-              <button className="agBtn agBtn--ghost" onClick={onCerrar} type="button">Cerrar Caja</button>
-            </div>
+          <div className="agGrid agGrid--2">
+            <form
+              className="agForm"
+              onSubmit={(e) => {
+                e.preventDefault();
+                onAbrir();
+              }}
+            >
+              <label>
+                Monto de apertura
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={montoApertura}
+                  onChange={(e) => setMontoApertura(e.target.value)}
+                  placeholder="Ej: 50000"
+                />
+              </label>
+              <div>
+                <button className="agBtn" type="submit" disabled={Boolean(resumen?.abierta)}>
+                  Abrir Caja
+                </button>
+              </div>
+            </form>
+
+            <form
+              className="agForm"
+              onSubmit={(e) => {
+                e.preventDefault();
+                onCerrar();
+              }}
+            >
+              <label>
+                Monto de cierre
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={montoCierre}
+                  onChange={(e) => setMontoCierre(e.target.value)}
+                  placeholder="Ej: 73500"
+                />
+              </label>
+              <div>
+                <button className="agBtn agBtn--ghost" type="submit" disabled={!resumen?.abierta}>
+                  Cerrar Caja
+                </button>
+              </div>
+            </form>
           </div>
 
           {msg ? <p className="agOk">{msg}</p> : null}
@@ -233,7 +297,7 @@ export default function CajaAdmin() {
                           {m.tipo === 1 ? "Ingreso" : "Egreso"}
                         </span>
                       </td>
-                      <td>{m.concepto}</td>
+                      <td>{formatConcepto(m.concepto)}</td>
                       <td>{money.format(m.monto)}</td>
                     </tr>
                   ))
@@ -249,6 +313,8 @@ export default function CajaAdmin() {
             <div className="agItem"><div className="agItem__icon">V</div><div><h4>Ventas del dia</h4></div><div className="agItem__value">{ventasDia?.cantidadVentas ?? 0}</div></div>
             <div className="agItem"><div className="agItem__icon">$</div><div><h4>Total Ingresos</h4></div><div className="agItem__value">{money.format(resumen?.ingresos ?? 0)}</div></div>
             <div className="agItem"><div className="agItem__icon">-</div><div><h4>Total Egresos</h4></div><div className="agItem__value">{money.format(resumen?.egresos ?? 0)}</div></div>
+            <div className="agItem"><div className="agItem__icon">C</div><div><h4>Total Compras</h4></div><div className="agItem__value">{money.format(diario?.totalCompras ?? resumen?.totalCompras ?? 0)}</div></div>
+            <div className="agItem"><div className="agItem__icon">N</div><div><h4>Notas de credito (cant.)</h4></div><div className="agItem__value">{diario?.cantidadNotasCredito ?? resumen?.cantidadNotasCredito ?? 0}</div></div>
             <div className="agItem"><div className="agItem__icon">=</div><div><h4>Neto del dia</h4></div><div className="agItem__value">{money.format(diario?.saldoNeto ?? ((resumen?.ingresos ?? 0) - (resumen?.egresos ?? 0)))}</div></div>
           </div>
           <div className="agHint" style={{ marginTop: 12 }}>
@@ -281,15 +347,14 @@ export default function CajaAdmin() {
                   <th>Inicial</th>
                   <th>Ingresos</th>
                   <th>Egresos</th>
-                  <th>Esperado</th>
+                  <th>Compras</th>
+                  <th>Notas credito (cant.)</th>
                   <th>Final</th>
-                  <th>Diferencia</th>
-                  <th>Movs.</th>
                 </tr>
               </thead>
               <tbody>
                 {historial.length === 0 ? (
-                  <tr><td colSpan={11}>Sin cajas registradas en el periodo.</td></tr>
+                  <tr><td colSpan={10}>Sin cajas registradas en el periodo.</td></tr>
                 ) : (
                   historial.map((caja) => (
                     <tr key={caja.cajaId}>
@@ -304,10 +369,9 @@ export default function CajaAdmin() {
                       <td>{money.format(caja.saldoInicial ?? 0)}</td>
                       <td>{money.format(caja.ingresos ?? 0)}</td>
                       <td>{money.format(caja.egresos ?? 0)}</td>
-                      <td>{money.format(caja.saldoEsperado ?? 0)}</td>
+                      <td>{money.format(caja.totalCompras ?? 0)}</td>
+                      <td>{caja.cantidadNotasCredito ?? 0}</td>
                       <td>{caja.saldoFinal == null ? "-" : money.format(caja.saldoFinal)}</td>
-                      <td>{caja.diferenciaCierre == null ? "-" : money.format(caja.diferenciaCierre)}</td>
-                      <td>{caja.cantidadMovimientos ?? 0}</td>
                     </tr>
                   ))
                 )}
@@ -328,22 +392,20 @@ export default function CajaAdmin() {
               <thead>
                 <tr>
                   <th>Fecha</th>
-                  <th>Cajas</th>
                   <th>Ingresos</th>
                   <th>Egresos</th>
-                  <th>Neto</th>
-                  <th>Movs.</th>
+                  <th>Compras</th>
+                  <th>Notas credito (cant.)</th>
                 </tr>
               </thead>
               <tbody>
                 {resumenSemanal.map((d) => (
                   <tr key={d.key}>
                     <td>{new Date(`${d.fecha}T00:00:00`).toLocaleDateString("es-AR")}</td>
-                    <td>{d.cajas}</td>
                     <td>{money.format(d.ingresos)}</td>
                     <td>{money.format(d.egresos)}</td>
-                    <td>{money.format(d.neto)}</td>
-                    <td>{d.movimientos}</td>
+                    <td>{money.format(d.compras)}</td>
+                    <td>{d.cantidadNotasCredito}</td>
                   </tr>
                 ))}
               </tbody>

@@ -5,6 +5,8 @@ import Comprobante from "@/features/ventas/pages/Comprobante";
 // Auth
 import Login from "@/features/auth/pages/Login";
 import Register from "@/features/auth/pages/Register";
+import ForgotPassword from "@/features/auth/pages/ForgotPassword";
+import ResetPassword from "@/features/auth/pages/ResetPassword";
 
 // Cliente
 import Catalogo from "@/features/productos/pages/Catalogo";
@@ -31,9 +33,11 @@ import PedidosRetiro from "@/features/adminVentas/pages/PedidosRetiro";
 import PedidoRetiroDetalle from "@/features/adminVentas/pages/PedidoRetiroDetalle";
 import PosVenta from "@/features/adminVentas/pages/PosVenta";
 import PosPago from "@/features/adminVentas/pages/PosPago";
+import SeniaGenerar from "@/features/adminVentas/pages/SeniaGenerar";
 import HistorialFacturas from "@/features/adminVentas/pages/HistorialFacturas";
 import Devolucion from "@/features/adminVentas/pages/Devolucion";
 import AdminComprobante from "@/features/adminVentas/pages/Comprobante";
+import Reservas from "@/features/adminVentas/pages/Reservas";
 
 // AdminCompras
 import ComprasShell from "@/features/adminCompras/components/ComprasShell";
@@ -46,6 +50,7 @@ import CompraDetalle from "@/features/adminCompras/pages/CompraDetalle";
 import SeguimientoPedidos from "@/features/adminCompras/pages/SeguimientoPedidos";
 import HistorialCompras from "@/features/adminCompras/pages/HistorialCompras";
 import PromocionesCompras from "@/features/adminCompras/pages/PromocionesCompras";
+import PedidosSeniaCompras from "@/features/adminCompras/pages/PedidosSeniaCompras";
 
 // AdminGeneral
 import AdminGeneralShell from "@/features/adminGeneral/components/AdminGeneralShell";
@@ -65,7 +70,8 @@ export const router = createBrowserRouter([
       // Públicas
       { path: "/login", element: <Login /> },
       { path: "/registro", element: <Register /> },
-      { path: "/recuperar", element: <div style={{ padding: 20 }}>Recuperar password (pendiente)</div> },
+      { path: "/recuperar", element: <ForgotPassword /> },
+      { path: "/reset-password", element: <ResetPassword /> },
 
       // Privadas (TODO lo que requiera token acá adentro)
       {
@@ -106,6 +112,8 @@ export const router = createBrowserRouter([
                   { path: "/admin/pos", element: <PosVenta /> },
                   { path: "/admin/pos/pago", element: <PosPago /> },
                   { path: "/admin/facturas", element: <HistorialFacturas /> },
+                  { path: "/admin/reservas", element: <Reservas /> },
+                  { path: "/admin/reservas/nueva", element: <SeniaGenerar /> },
                   { path: "/admin/facturas/:ventaId", element: <AdminComprobante /> },
                   { path: "/admin/devolucion/:ventaId", element: <Devolucion /> },
                 ],
@@ -128,6 +136,7 @@ export const router = createBrowserRouter([
 
                   { path: "/compras/nueva", element: <NuevaCompra /> },
                   { path: "/compras/seguimiento", element: <SeguimientoPedidos /> },
+                  { path: "/compras/pedidos-senia", element: <PedidosSeniaCompras /> },
                   { path: "/compras/promociones", element: <PromocionesCompras /> },
                   { path: "/compras/historial", element: <HistorialCompras /> },
 

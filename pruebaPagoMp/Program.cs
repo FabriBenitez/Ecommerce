@@ -10,6 +10,7 @@ using pruebaPagoMp.Services.Carritos;
 using pruebaPagoMp.Services.Retiros;
 using pruebaPagoMp.Services.Ventas;
 using pruebaPagoMp.Services.Compras;
+using pruebaPagoMp.Services.Email;
 
 
 using BCrypt.Net;
@@ -71,6 +72,8 @@ builder.Services.AddScoped<pruebaPagoMp.Services.Bitacora.IBitacoraService, prue
 builder.Services.AddScoped<pruebaPagoMp.Services.Caja.ICajaService, pruebaPagoMp.Services.Caja.CajaService>();
 builder.Services.AddScoped<pruebaPagoMp.Services.Promociones.IPromocionService, pruebaPagoMp.Services.Promociones.PromocionService>();
 builder.Services.AddScoped<pruebaPagoMp.Services.Reportes.IReportesService, pruebaPagoMp.Services.Reportes.ReportesService>();
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 
 // 🔐 AUTH + JWT

@@ -41,7 +41,7 @@
   min-height: 62px;
   padding: 10px 16px;
   display: grid;
-  grid-template-columns: auto minmax(220px, 320px) 1fr auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 14px;
 }
@@ -56,23 +56,6 @@
 
 .agNav__brandIcon {
   font-size: 18px;
-}
-
-.agNav__searchWrap {
-  width: 100%;
-}
-
-.agNav__search {
-  width: 100%;
-  border: 1px solid #cce7d6;
-  background: #edf8f0;
-  color: #1d4132;
-  border-radius: 10px;
-  padding: 9px 12px;
-}
-
-.agNav__search::placeholder {
-  color: #6ba681;
 }
 
 .agNav__links {
@@ -239,6 +222,16 @@
 .agTable td {
   padding: 12px 10px;
   border-bottom: 1px solid #edf1f4;
+}
+
+.agTable--fit {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.agTable--fit th,
+.agTable--fit td {
+  word-break: break-word;
 }
 
 .agBadge {
@@ -455,6 +448,63 @@
   margin-top: 8px;
 }
 
+.agExecStack {
+  gap: 16px;
+}
+
+.agExecGrid2 {
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+}
+
+.agExecToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agExecMiniKpi {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.agExecList {
+  display: grid;
+  gap: 10px;
+}
+
+.agExecItem {
+  border: 1px solid #e6edf2;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.agExecItem span {
+  color: #5f768f;
+  font-size: 13px;
+}
+
+.agExecItem b {
+  font-size: 14px;
+  color: #1e3a55;
+}
+
+.agExecProviderSummary {
+  margin-bottom: 10px;
+}
+
+.agExecFoot {
+  margin: 10px 0 0;
+  color: #50677f;
+}
+
+@media print {
+  .agExecToolbar {
+    display: none !important;
+  }
+}
+
 @media (max-width: 1080px) {
   .agNav__inner {
     grid-template-columns: 1fr;
@@ -468,6 +518,11 @@
 
   .agKpis {
     grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .agExecGrid2,
+  .agExecMiniKpi {
+    grid-template-columns: 1fr;
   }
 
   .agGrid--2,
@@ -496,5 +551,10 @@
 
   .agFormRow {
     grid-template-columns: 1fr;
+  }
+
+  .agTable--fit {
+    min-width: 520px;
+    table-layout: auto;
   }
 }

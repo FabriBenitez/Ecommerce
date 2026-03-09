@@ -3,6 +3,7 @@ using pruebaPagoMp.Data;
 using pruebaPagoMp.Dtos.Caja;
 using pruebaPagoMp.Models.Bitacora;
 using pruebaPagoMp.Models.Caja.Enums;
+using pruebaPagoMp.Models.Ventas.Enums;
 using pruebaPagoMp.Security;
 using pruebaPagoMp.Services.Bitacora;
 
@@ -10,6 +11,7 @@ namespace pruebaPagoMp.Services.Caja;
 
 public class CajaService : ICajaService
 {
+    private const string CompraProveedorConceptPrefix = "COMPRA_PROVEEDOR:";
     private readonly ApplicationDbContext _context;
     private readonly IBitacoraService _bitacoraService;
     private readonly IDigitoVerificadorService _dvService;
@@ -63,8 +65,9 @@ public class CajaService : ICajaService
             .Where(m => m.Fecha >= caja.FechaApertura && m.Fecha <= fechaCierre)
             .ToListAsync();
 
-        var ingresos = movimientos.Where(m => m.Tipo == TipoMovimientoCaja.Ingreso).Sum(m => m.Monto);
-        var egresos = movimientos.Where(m => m.Tipo == TipoMovimientoCaja.Egreso).Sum(m => m.Monto);
+        var movimientosOperativos = movimientos.Where(m => !EsMovimientoCompraInformativa(m.Concepto)).ToList();
+        var ingresos = movimientosOperativos.Where(m => m.Tipo == TipoMovimientoCaja.Ingreso).Sum(m => m.Monto);
+        var egresos = movimientosOperativos.Where(m => m.Tipo == TipoMovimientoCaja.Egreso).Sum(m => m.Monto);
         var saldoEsperado = decimal.Round(caja.SaldoInicial + ingresos - egresos, 2);
         var saldoDeclarado = decimal.Round(dto.SaldoFinal, 2);
 
@@ -113,6 +116,9 @@ public class CajaService : ICajaService
                 SaldoInicial = 0m,
                 Ingresos = 0m,
                 Egresos = 0m,
+                TotalCompras = 0m,
+                TotalNotasCredito = 0m,
+                CantidadNotasCredito = 0,
                 SaldoActual = 0m,
                 FechaApertura = caja.FechaApertura,
                 FechaCierre = caja.FechaCierre
@@ -126,8 +132,22 @@ public class CajaService : ICajaService
             .AsNoTracking()
             .Where(m => m.Fecha >= inicio && m.Fecha <= fin)
             .ToListAsync();
-        var ingresos = movimientos.Where(m => m.Tipo == TipoMovimientoCaja.Ingreso).Sum(m => m.Monto);
-        var egresos = movimientos.Where(m => m.Tipo == TipoMovimientoCaja.Egreso).Sum(m => m.Monto);
+        var movimientosOperativos = movimientos.Where(m => !EsMovimientoCompraInformativa(m.Concepto)).ToList();
+        var ingresos = movimientosOperativos.Where(m => m.Tipo == TipoMovimientoCaja.Ingreso).Sum(m => m.Monto);
+        var egresos = movimientosOperativos.Where(m => m.Tipo == TipoMovimientoCaja.Egreso).Sum(m => m.Monto);
+        var totalCompras = await _context.FacturasProveedor
+            .AsNoTracking()
+            .Where(f => f.Fecha >= inicio && f.Fecha <= fin)
+            .SumAsync(f => (decimal?)f.Monto) ?? 0m;
+        var totalNotasCredito = await _context.VentaPagos
+            .AsNoTracking()
+            .Where(vp => vp.Fecha >= inicio && vp.Fecha <= fin)
+            .Where(vp => vp.MedioPago == MedioPago.NotaCredito)
+            .SumAsync(vp => (decimal?)vp.Monto) ?? 0m;
+        var cantidadNotasCredito = await _context.VentaPagos
+            .AsNoTracking()
+            .Where(vp => vp.Fecha >= inicio && vp.Fecha <= fin)
+            .CountAsync(vp => vp.MedioPago == MedioPago.NotaCredito);
 
         return new CajaResumenDto
         {
@@ -136,6 +156,9 @@ public class CajaService : ICajaService
             SaldoInicial = caja.SaldoInicial,
             Ingresos = ingresos,
             Egresos = egresos,
+            TotalCompras = totalCompras,
+            TotalNotasCredito = totalNotasCredito,
+            CantidadNotasCredito = cantidadNotasCredito,
             SaldoActual = caja.SaldoInicial + ingresos - egresos,
             FechaApertura = caja.FechaApertura,
             FechaCierre = caja.FechaCierre
@@ -184,7 +207,20 @@ public class CajaService : ICajaService
         var movimientos = await _context.MovimientosCaja
             .AsNoTracking()
             .Where(m => m.Fecha >= inicioRango && m.Fecha <= finRango)
-            .Select(m => new { m.Fecha, m.Tipo, m.Monto })
+            .Select(m => new { m.Fecha, m.Tipo, m.Monto, m.Concepto })
+            .ToListAsync();
+
+        var facturas = await _context.FacturasProveedor
+            .AsNoTracking()
+            .Where(f => f.Fecha >= inicioRango && f.Fecha <= finRango)
+            .Select(f => new { f.Fecha, f.Monto })
+            .ToListAsync();
+
+        var notasCredito = await _context.VentaPagos
+            .AsNoTracking()
+            .Where(vp => vp.Fecha >= inicioRango && vp.Fecha <= finRango)
+            .Where(vp => vp.MedioPago == MedioPago.NotaCredito)
+            .Select(vp => new { vp.Fecha, vp.Monto, vp.Id })
             .ToListAsync();
 
         var ahora = DateTime.UtcNow;
@@ -196,17 +232,26 @@ public class CajaService : ICajaService
             var movimientosCaja = movimientos
                 .Where(m => m.Fecha >= caja.FechaApertura && m.Fecha <= finCaja)
                 .ToList();
+            var movimientosOperativos = movimientosCaja.Where(m => !EsMovimientoCompraInformativa(m.Concepto)).ToList();
 
-            var ingresos = movimientosCaja
+            var ingresos = movimientosOperativos
                 .Where(m => m.Tipo == TipoMovimientoCaja.Ingreso)
                 .Sum(m => m.Monto);
 
-            var egresos = movimientosCaja
+            var egresos = movimientosOperativos
                 .Where(m => m.Tipo == TipoMovimientoCaja.Egreso)
                 .Sum(m => m.Monto);
 
             var saldoEsperado = decimal.Round(caja.SaldoInicial + ingresos - egresos, 2);
             decimal? diferenciaCierre = null;
+            var totalCompras = facturas
+                .Where(f => f.Fecha >= caja.FechaApertura && f.Fecha <= finCaja)
+                .Sum(f => f.Monto);
+            var totalNotasCredito = notasCredito
+                .Where(nc => nc.Fecha >= caja.FechaApertura && nc.Fecha <= finCaja)
+                .Sum(nc => nc.Monto);
+            var cantidadNotasCredito = notasCredito
+                .Count(nc => nc.Fecha >= caja.FechaApertura && nc.Fecha <= finCaja);
 
             if (caja.SaldoFinal.HasValue)
             {
@@ -223,6 +268,9 @@ public class CajaService : ICajaService
                 SaldoInicial = caja.SaldoInicial,
                 Ingresos = ingresos,
                 Egresos = egresos,
+                TotalCompras = totalCompras,
+                TotalNotasCredito = totalNotasCredito,
+                CantidadNotasCredito = cantidadNotasCredito,
                 SaldoEsperado = saldoEsperado,
                 SaldoFinal = caja.SaldoFinal,
                 DiferenciaCierre = diferenciaCierre,
@@ -231,5 +279,11 @@ public class CajaService : ICajaService
         }
 
         return resultado;
+    }
+
+    private static bool EsMovimientoCompraInformativa(string? concepto)
+    {
+        if (string.IsNullOrWhiteSpace(concepto)) return false;
+        return concepto.StartsWith(CompraProveedorConceptPrefix, StringComparison.OrdinalIgnoreCase);
     }
 }

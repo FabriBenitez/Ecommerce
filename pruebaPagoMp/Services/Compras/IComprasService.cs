@@ -9,6 +9,9 @@ public interface IComprasService
     Task<List<ProveedorListDto>> ListarProveedoresAsync(bool? activos);
     Task<ProveedorListDto?> ObtenerProveedorPorIdAsync(int id);
     Task ActualizarProveedorAsync(int id, ProveedorCreateDto dto);
+    Task<List<ProveedorProductoListDto>> ListarProductosPorProveedorAsync(int proveedorId);
+    Task UpsertProductoProveedorAsync(int proveedorId, ProveedorProductoUpsertDto dto);
+    Task<int> ReemplazarProductosProveedorDesdeArchivoAsync(int proveedorId, Stream stream, string fileName);
 
     // Compras
     Task<int> CrearCompraAsync(CrearCompraDto dto);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { adminComprasDashboard } from "../api/adminCompras.api";
+import "./ComprasDashboard.css";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 
@@ -12,6 +13,20 @@ function proveedorText(value) {
     return razon ? `${razon}${cuit}` : `Proveedor #${value.proveedorId ?? "-"}`;
   }
   return String(value);
+}
+
+function estadoCompraLabel(e) {
+  const map = { 1: "Pendiente", 2: "Confirmada", 3: "Cancelada" };
+  return map[e] ?? String(e ?? "");
+}
+
+function estadoCompraClass(e) {
+  const map = {
+    1: "cDashLast__status cDashLast__status--pending",
+    2: "cDashLast__status cDashLast__status--ok",
+    3: "cDashLast__status cDashLast__status--cancel",
+  };
+  return map[e] ?? "cDashLast__status";
 }
 
 export default function ComprasDashboard() {
@@ -49,10 +64,7 @@ export default function ComprasDashboard() {
   return (
     <div className="cDash">
       <header className="ccard ccard__pad cDashHero">
-        <h1 className="ctitle">Dashboard Operativo</h1>
-        <p className="cmuted" style={{ marginTop: 6 }}>
-          Gestion centralizada de stock y abastecimiento.
-        </p>
+        <h1 className="ctitle">Gestion de stock y abastecimiento.</h1>
       </header>
 
       {loading ? <div className="ccard ccard__pad">Cargando...</div> : null}
@@ -64,19 +76,16 @@ export default function ComprasDashboard() {
             <article className="ccard ccard__pad cTile cTile--accent">
               <div className="cTile__label">Productos con stock bajo</div>
               <div className="cTile__value">{data.stockBajoCount}</div>
-              <div className="cTile__meta">Stock &lt; {data.stockMinimo}</div>
             </article>
 
             <article className="ccard ccard__pad cTile">
               <div className="cTile__label">Compras pendientes</div>
               <div className="cTile__value">{data.comprasPendientesCount}</div>
-              <div className="cTile__meta">En espera de confirmacion</div>
             </article>
 
             <article className="ccard ccard__pad cTile">
               <div className="cTile__label">Stock minimo</div>
               <div className="cTile__value">{data.stockMinimo}</div>
-              <div className="cTile__meta">Parametro operativo vigente</div>
             </article>
           </section>
 
@@ -88,29 +97,43 @@ export default function ComprasDashboard() {
               </a>
             </div>
 
-            <div className="tableWrap" style={{ marginTop: 12 }}>
-              <table className="ctable">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Proveedor</th>
-                    <th>Fecha</th>
-                    <th className="right">Total</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(data.ultimasConfirmadas ?? []).map((c) => (
-                    <tr key={c.id}>
-                      <td>#{c.id}</td>
-                      <td>{proveedorText(c.proveedor)}</td>
-                      <td>{new Date(c.fecha).toLocaleString("es-AR")}</td>
-                      <td className="right strong">{money.format(c.total)}</td>
-                      <td>{String(c.estadoCompra)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="cDashLast">
+              <div className="cDashLast__head">
+                <span>Proveedor</span>
+                <span>Fecha</span>
+                <span className="right">Total</span>
+                <span>Estado</span>
+              </div>
+
+              {(data.ultimasConfirmadas ?? []).map((c) => (
+                <article key={c.id} className="cDashLast__row">
+                  <div className="cDashLast__cell cDashLast__provider">
+                    <span className="cDashLast__label">Proveedor</span>
+                    <b>{proveedorText(c.proveedor)}</b>
+                  </div>
+
+                  <div className="cDashLast__cell cDashLast__date">
+                    <span className="cDashLast__label">Fecha</span>
+                    <span>{new Date(c.fecha).toLocaleString("es-AR")}</span>
+                  </div>
+
+                  <div className="cDashLast__cell cDashLast__amount right">
+                    <span className="cDashLast__label">Total</span>
+                    <b>{money.format(c.total)}</b>
+                  </div>
+
+                  <div className="cDashLast__cell cDashLast__state">
+                    <span className="cDashLast__label">Estado</span>
+                    <span className={estadoCompraClass(c.estadoCompra)}>
+                      {estadoCompraLabel(c.estadoCompra)}
+                    </span>
+                  </div>
+                </article>
+              ))}
+
+              {(data.ultimasConfirmadas ?? []).length === 0 ? (
+                <div className="cDashLast__empty">No hay compras confirmadas recientes.</div>
+              ) : null}
             </div>
           </section>
         </>

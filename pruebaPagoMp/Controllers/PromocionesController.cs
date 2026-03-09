@@ -58,6 +58,20 @@ public class PromocionesController : ControllerBase
         return Ok(new { desactivadas = count });
     }
 
+    [HttpDelete("by-editorial")]
+    public async Task<IActionResult> DesactivarPorEditorial([FromQuery] string editorial)
+    {
+        try
+        {
+            var count = await _service.DesactivarPorEditorialAsync(editorial);
+            return Ok(new { desactivadas = count });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
     [HttpDelete("by-genero")]
     public async Task<IActionResult> DesactivarPorGenero([FromQuery] string genero)
     {

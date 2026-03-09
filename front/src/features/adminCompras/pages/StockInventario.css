@@ -41,6 +41,10 @@
 }
 
 .stockCard__grid input,
+.stockCard__grid select,
+.stockCard select,
+.stockTable select,
+.stockTable input,
 .stockCard__file input {
   width: 100%;
   min-height: 42px;
@@ -105,12 +109,136 @@
 }
 
 .stockTable {
-  min-width: 820px;
+  width: 100%;
+  min-width: 980px;
+  table-layout: auto;
+}
+
+.stockTable th,
+.stockTable td {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.stockTable th:nth-child(1),
+.stockTable td:nth-child(1) {
+  width: 92px;
+}
+
+.stockTable th:nth-child(3),
+.stockTable td:nth-child(3) {
+  width: 180px;
+}
+
+.stockTable th:nth-child(4),
+.stockTable td:nth-child(4) {
+  width: 110px;
+}
+
+.stockTable th:nth-child(5),
+.stockTable td:nth-child(5) {
+  width: 78px;
+}
+
+.stockTable th:nth-child(6),
+.stockTable td:nth-child(6) {
+  width: 92px;
+}
+
+.stockTable th:nth-child(7),
+.stockTable td:nth-child(7) {
+  width: 220px;
+}
+
+.stockTable th:nth-child(8),
+.stockTable td:nth-child(8) {
+  width: 170px;
+}
+
+.stockTable th:nth-child(9),
+.stockTable td:nth-child(9) {
+  width: 120px;
+}
+
+.stockTable th:nth-child(2),
+.stockTable td:nth-child(2) {
+  min-width: 300px;
 }
 
 .stockTable tbody td {
   padding-top: 14px;
   padding-bottom: 14px;
+  vertical-align: top;
+}
+
+.stockTable__img {
+  width: 64px;
+  height: 88px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #d6dce8;
+  background: #fff;
+}
+
+.stockTable__imgFallback {
+  width: 64px;
+  height: 88px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 6px;
+}
+
+.stockTable__desc {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 520px;
+}
+
+.stockTable__detailItem {
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.stockTable .sbadge {
+  min-width: 0;
+  width: 100%;
+}
+
+.stockTable__deleteBtn {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fff7f7;
+}
+
+.stockTable__deleteBtn:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.stockTable__deleteBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.stockActionsStack {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.stockEditGrid {
+  display: grid;
+  gap: 8px;
 }
 
 @media (max-width: 980px) {

@@ -1,6 +1,6 @@
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 
-export default function CompraItemsTable({ items, productosById, onRemove, onChange }) {
+export default function CompraItemsTable({ items, productosById, onRemove, onChange, bloquearCosto = false }) {
   const total = (items ?? []).reduce((acc, it) => acc + (it.cantidad * it.costoUnitario), 0);
 
   return (
@@ -41,14 +41,18 @@ export default function CompraItemsTable({ items, productosById, onRemove, onCha
                   </td>
 
                   <td className="right">
-                    <input
-                      className="cinput cinput--sm"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={it.costoUnitario}
-                      onChange={(e) => onChange(idx, { ...it, costoUnitario: Number(e.target.value || 0) })}
-                    />
+                    {bloquearCosto ? (
+                      <span className="strong">{money.format(it.costoUnitario || 0)}</span>
+                    ) : (
+                      <input
+                        className="cinput cinput--sm"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={it.costoUnitario}
+                        onChange={(e) => onChange(idx, { ...it, costoUnitario: Number(e.target.value || 0) })}
+                      />
+                    )}
                   </td>
 
                   <td className="right strong">{money.format(subtotal)}</td>

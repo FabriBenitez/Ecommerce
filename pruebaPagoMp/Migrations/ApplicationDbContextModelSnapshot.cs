@@ -505,6 +505,36 @@ namespace pruebaPagoMp.Migrations
                     b.ToTable("Proveedores");
                 });
 
+            modelBuilder.Entity("pruebaPagoMp.Models.Compras.ProveedorProducto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CostoUnitario")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProveedorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("ProveedorId", "ProductoId")
+                        .IsUnique();
+
+                    b.ToTable("ProveedorProductos");
+                });
+
             modelBuilder.Entity("pruebaPagoMp.Models.Pago", b =>
                 {
                     b.Property<int>("Id")
@@ -553,6 +583,40 @@ namespace pruebaPagoMp.Migrations
                         .IsUnique();
 
                     b.ToTable("Pagos");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.PasswordResetToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId", "TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("PasswordResetTokens", (string)null);
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.Pedido", b =>
@@ -662,6 +726,16 @@ namespace pruebaPagoMp.Migrations
 
                     b.Property<string>("Descripcion")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Editorial")
+                        .HasMaxLength(150)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<bool>("EsTemporalSenia")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTime>("FechaCreacion")
                         .ValueGeneratedOnAdd()
@@ -821,6 +895,174 @@ namespace pruebaPagoMp.Migrations
                     b.HasIndex("VentaId");
 
                     b.ToTable("DetalleVentas");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.PedidoSenia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClienteDni")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("ClienteNombre")
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("ClienteTelefono")
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReservaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReservaId")
+                        .IsUnique();
+
+                    b.ToTable("PedidosSenia");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.Reserva", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClienteDni")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClienteNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClienteTelefono")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaVencimiento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("MontoSenia")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Observaciones")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequiereCompra")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal>("SaldoPendiente")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("UsuarioAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("VentaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioAdminId");
+
+                    b.HasIndex("VentaId");
+
+                    b.ToTable("Reservas");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.ReservaItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("EsAConseguir")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReservaId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("ReservaId");
+
+                    b.ToTable("ReservaItems");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.ReservaPago", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MedioPago")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Monto")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Referencia")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReservaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReservaId");
+
+                    b.ToTable("ReservaPagos");
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.Ventas.Venta", b =>
@@ -1082,6 +1324,25 @@ namespace pruebaPagoMp.Migrations
                     b.Navigation("Compra");
                 });
 
+            modelBuilder.Entity("pruebaPagoMp.Models.Compras.ProveedorProducto", b =>
+                {
+                    b.HasOne("pruebaPagoMp.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("pruebaPagoMp.Models.Compras.Proveedor", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Proveedor");
+                });
+
             modelBuilder.Entity("pruebaPagoMp.Models.Pago", b =>
                 {
                     b.HasOne("pruebaPagoMp.Models.Pedido", "Pedido")
@@ -1091,6 +1352,17 @@ namespace pruebaPagoMp.Migrations
                         .HasConstraintName("FK_Pagos_Pedidos");
 
                     b.Navigation("Pedido");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.PasswordResetToken", b =>
+                {
+                    b.HasOne("pruebaPagoMp.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.Pedido", b =>
@@ -1140,6 +1412,64 @@ namespace pruebaPagoMp.Migrations
                     b.Navigation("Producto");
 
                     b.Navigation("Venta");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.PedidoSenia", b =>
+                {
+                    b.HasOne("pruebaPagoMp.Models.Ventas.Reserva", "Reserva")
+                        .WithMany()
+                        .HasForeignKey("ReservaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reserva");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.Reserva", b =>
+                {
+                    b.HasOne("pruebaPagoMp.Models.Usuario", "UsuarioAdmin")
+                        .WithMany()
+                        .HasForeignKey("UsuarioAdminId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("pruebaPagoMp.Models.Ventas.Venta", "Venta")
+                        .WithMany()
+                        .HasForeignKey("VentaId");
+
+                    b.Navigation("UsuarioAdmin");
+
+                    b.Navigation("Venta");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.ReservaItem", b =>
+                {
+                    b.HasOne("pruebaPagoMp.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("pruebaPagoMp.Models.Ventas.Reserva", "Reserva")
+                        .WithMany("Items")
+                        .HasForeignKey("ReservaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Reserva");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.ReservaPago", b =>
+                {
+                    b.HasOne("pruebaPagoMp.Models.Ventas.Reserva", "Reserva")
+                        .WithMany("Pagos")
+                        .HasForeignKey("ReservaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reserva");
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.Ventas.Venta", b =>
@@ -1204,6 +1534,13 @@ namespace pruebaPagoMp.Migrations
                     b.Navigation("Pedidos");
 
                     b.Navigation("UsuarioRoles");
+                });
+
+            modelBuilder.Entity("pruebaPagoMp.Models.Ventas.Reserva", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("Pagos");
                 });
 
             modelBuilder.Entity("pruebaPagoMp.Models.Ventas.Venta", b =>

@@ -4,6 +4,7 @@ import { historialPresencial } from "../api/adminVentas.api";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
 const estadoMap = { 1: "Pendiente", 2: "Pagada", 3: "Preparado", 4: "ListoParaRetirar", 5: "Cancelada" };
+const canalMap = { 1: "Web", 2: "Presencial" };
 
 export default function HistorialFacturas() {
   const [rows, setRows] = useState([]);
@@ -45,7 +46,7 @@ export default function HistorialFacturas() {
   return (
     <div>
       <h1 className="aTitle">Historial de facturas y ventas</h1>
-      <p className="aSub">Incluye ventas presenciales.</p>
+      <p className="aSub">Incluye ventas presenciales y web.</p>
 
       <section className="aCard" style={{ marginBottom: 14 }}>
         <input className="aInput" placeholder="Buscar por ID, DNI o nombre..." value={q} onChange={(e) => setQ(e.target.value)} />
@@ -63,6 +64,7 @@ export default function HistorialFacturas() {
                   <th>ID</th>
                   <th>Fecha</th>
                   <th>DNI / Cliente</th>
+                  <th>Canal</th>
                   <th className="aRight">Total</th>
                   <th>Estado</th>
                   <th className="aRight">Acciones</th>
@@ -77,6 +79,7 @@ export default function HistorialFacturas() {
                       <div style={{ fontWeight: 900 }}>{r.clienteNombre ?? "-"}</div>
                       <div style={{ color: "#666", fontSize: 12 }}>{r.clienteDni ?? "-"}</div>
                     </td>
+                    <td>{canalMap[r.canal] ?? `Canal ${r.canal}`}</td>
                     <td className="aRight" style={{ fontWeight: 900 }}>{money.format(r.total)}</td>
                     <td>
                       <span className={r.estadoVenta === 2 ? "aBadge aBadge--green" : r.estadoVenta === 5 ? "aBadge aBadge--gray" : "aBadge aBadge--yellow"}>
@@ -91,7 +94,7 @@ export default function HistorialFacturas() {
                 ))}
                 {filtrados.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ color: "#666" }}>Sin resultados.</td>
+                    <td colSpan={7} style={{ color: "#666" }}>Sin resultados.</td>
                   </tr>
                 ) : null}
               </tbody>

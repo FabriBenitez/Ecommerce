@@ -121,6 +121,18 @@
   cursor: pointer;
 }
 
+.productCard__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.productCard__btn--ghost {
+  background: #f4f4f5;
+  color: #111;
+  border: 1px solid #d6d6d8;
+}
+
 .productCard__btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

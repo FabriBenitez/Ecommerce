@@ -33,9 +33,14 @@ public partial class ApplicationDbContext : DbContext
     public DbSet<Bitacora> Bitacoras => Set<Bitacora>();
     public DbSet<DigitoVerificador> DigitosVerificadores => Set<DigitoVerificador>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     public DbSet<Venta> Ventas { get; set; } = null!;
     public DbSet<DetalleVenta> DetalleVentas { get; set; } = null!;
+    public DbSet<Reserva> Reservas { get; set; } = null!;
+    public DbSet<ReservaItem> ReservaItems { get; set; } = null!;
+    public DbSet<ReservaPago> ReservaPagos { get; set; } = null!;
+    public DbSet<PedidoSenia> PedidosSenia { get; set; } = null!;
 
     public DbSet<VentaPago> VentaPagos => Set<VentaPago>();
     public DbSet<MovimientoCaja> MovimientosCaja => Set<MovimientoCaja>();
@@ -48,6 +53,7 @@ public partial class ApplicationDbContext : DbContext
 
 
     public DbSet<Proveedor> Proveedores => Set<Proveedor>();
+    public DbSet<ProveedorProducto> ProveedorProductos => Set<ProveedorProducto>();
     public DbSet<Compra> Compras => Set<Compra>();
     public DbSet<DetalleCompra> DetalleCompras => Set<DetalleCompra>();
     public DbSet<FacturaProveedor> FacturasProveedor => Set<FacturaProveedor>();
@@ -185,6 +191,11 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.Nombre)
                 .HasMaxLength(150)
                 .IsUnicode(false);
+            entity.Property(e => e.Editorial)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.EsTemporalSenia)
+                .HasDefaultValue(false);
             entity.Property(e => e.Precio).HasColumnType("decimal(10, 2)");
         });
 
@@ -211,6 +222,43 @@ public partial class ApplicationDbContext : DbContext
         modelBuilder.Entity<UsuarioRol>(entity =>
         {
             entity.HasKey(ur => new { ur.UsuarioId, ur.RolId });
+        });
+
+        modelBuilder.Entity<PedidoSenia>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ReservaId).IsUnique();
+            entity.Property(e => e.ClienteDni).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.ClienteNombre).HasMaxLength(200).IsUnicode(false);
+            entity.Property(e => e.ClienteTelefono).HasMaxLength(50).IsUnicode(false);
+            entity.HasOne(e => e.Reserva)
+                .WithMany()
+                .HasForeignKey(e => e.ReservaId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Reserva>(entity =>
+        {
+            entity.Property(e => e.RequiereCompra).HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<ReservaItem>(entity =>
+        {
+            entity.Property(e => e.EsAConseguir).HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.ToTable("PasswordResetTokens");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TokenHash)
+                .HasMaxLength(128)
+                .IsUnicode(false);
+            entity.HasIndex(e => new { e.UsuarioId, e.TokenHash }).IsUnique();
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<WebhookLog>(entity =>
@@ -254,6 +302,38 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<pruebaPagoMp.Models.Compras.FacturaProveedor>()
             .Property(x => x.Monto)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Ventas.Reserva>()
+            .Property(x => x.Total)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Ventas.Reserva>()
+            .Property(x => x.MontoSenia)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Ventas.Reserva>()
+            .Property(x => x.SaldoPendiente)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Ventas.ReservaItem>()
+            .Property(x => x.PrecioUnitario)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Ventas.ReservaItem>()
+            .Property(x => x.Subtotal)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Ventas.ReservaPago>()
+            .Property(x => x.Monto)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Compras.ProveedorProducto>()
+            .HasIndex(x => new { x.ProveedorId, x.ProductoId })
+            .IsUnique();
+
+        modelBuilder.Entity<pruebaPagoMp.Models.Compras.ProveedorProducto>()
+            .Property(x => x.CostoUnitario)
             .HasColumnType("decimal(18,2)");
 
         modelBuilder.Entity<pruebaPagoMp.Models.Caja.Caja>()

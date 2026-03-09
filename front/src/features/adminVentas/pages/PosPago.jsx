@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { crearVentaPresencial } from "../api/adminVentas.api";
+import { confirmAction } from "@/shared/ui/sweetAlert";
 import "./PosPago.css";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
@@ -46,7 +47,7 @@ export default function PosPago() {
     setPagos((prev) => {
       const exists = prev.some((p) => p.medioPago === medioPago);
       if (exists) return prev.filter((p) => p.medioPago !== medioPago);
-      return [...prev, { medioPago, monto: 0, referencia: "" }];
+      return [...prev, { medioPago, monto: "", referencia: "" }];
     });
   };
 
@@ -75,12 +76,22 @@ export default function PosPago() {
       return;
     }
 
+    const confirmarVenta = await confirmAction({
+      title: "Confirmar venta",
+      text: "Desea confirmar la venta?",
+      confirmText: "Si, confirmar",
+      cancelText: "No, volver",
+      icon: "warning",
+    });
+    if (!confirmarVenta) return;
+
     try {
       setLoading(true);
 
       const payload = {
         clienteDni: venta.clienteDni,
         clienteNombre: venta.clienteNombre,
+        clienteTelefono: venta.clienteTelefono,
         items: venta.items.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad })),
         pagos: pagos.map((p) => ({
           medioPago: Number(p.medioPago),
@@ -99,7 +110,6 @@ export default function PosPago() {
       setLoading(false);
     }
   };
-
   return (
     <div className="aGrid2">
       <section className="aCard">
@@ -108,7 +118,21 @@ export default function PosPago() {
             <h1 className="aTitle">Validacion de pago</h1>
             <p className="aSub">Selecciona medios y completa montos debajo de cada uno.</p>
           </div>
-          <Link className="aBtnGhost" to="/admin/pos">Volver al carrito</Link>
+          <Link
+            className="aBtnGhost"
+            to="/admin/pos"
+            state={{
+              draftVenta: {
+                clienteDni: venta.clienteDni,
+                clienteNombre: venta.clienteNombre,
+                items: venta.items,
+                total: venta.total,
+                notaCredito: venta.notaCredito ?? 0,
+              },
+            }}
+          >
+            Volver al carrito
+          </Link>
         </div>
 
         <div className="ppMetodoGrid">
@@ -175,9 +199,11 @@ export default function PosPago() {
 
         {error ? <p className="ppError">{error}</p> : null}
 
-        <button className="aBtn ppConfirmBtn" onClick={confirmar} disabled={loading}>
-          {loading ? "Confirmando..." : "Confirmar y registrar venta"}
-        </button>
+        <div className="aRow" style={{ gap: 10 }}>
+          <button className="aBtn ppConfirmBtn" onClick={confirmar} disabled={loading}>
+            {loading ? "Confirmando..." : "Confirmar y registrar venta"}
+          </button>
+        </div>
       </section>
 
       <aside className="aCard">
@@ -209,3 +235,7 @@ export default function PosPago() {
     </div>
   );
 }
+
+
+
+

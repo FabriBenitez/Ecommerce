@@ -27,13 +27,10 @@ export default function AdminGeneralNavbar() {
       <div className="agNav__inner">
         <div className="agNav__brand">
           <span className="agNav__brandIcon">📗</span>
-          <span>Bookstore Admin</span>
-        </div>
-        <div className="agNav__searchWrap">
-          <input className="agNav__search" placeholder="Buscar libros, ventas, reportes..." />
+          <span>Administrador General</span>
         </div>
         <nav className="agNav__links" aria-label="Admin General">
-          <NavLink to="/admin-general" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Dashboard</NavLink>
+          <NavLink to="/admin-general" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Inicio</NavLink>
           <NavLink to="/admin-general/caja" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Caja</NavLink>
           <NavLink to="/admin-general/usuarios" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Usuarios</NavLink>
           <NavLink to="/admin-general/reportes" className={({ isActive }) => cx("agNav__link", isActive && "isActive")}>Reportes</NavLink>

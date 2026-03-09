@@ -76,6 +76,7 @@ export default function Catalogo() {
   const [q, setQ] = useState("");
   const [ordenPrecio, setOrdenPrecio] = useState("relevancia");
   const [genero, setGenero] = useState("todos");
+  const [detalleLibro, setDetalleLibro] = useState(null);
 
   const totalPromos = useMemo(() => items.filter((x) => x.tienePromocionActiva).length, [items]);
 
@@ -99,8 +100,7 @@ export default function Catalogo() {
     const term = q.trim().toLowerCase();
     let list = items.filter((p) => {
       const n = (p.nombre || "").toLowerCase();
-      const d = (p.descripcion || "").toLowerCase();
-      const matchTexto = !term || n.includes(term) || d.includes(term);
+      const matchTexto = !term || n.includes(term);
       if (!matchTexto) return false;
 
       if (genero === "todos") return true;
@@ -161,15 +161,6 @@ export default function Catalogo() {
     if (!existe) setGenero("todos");
   }, [genero, generosDisponibles]);
 
-  const recargarCatalogo = async () => {
-    const ok = await load(true);
-    if (ok) {
-      await notifySuccess("Catalogo actualizado", "Se actualizaron stock, precios y filtros de genero.");
-    } else {
-      await notifyError("No se pudo actualizar", "Intenta nuevamente en unos segundos.");
-    }
-  };
-
   const agregar = async (productoId) => {
     try {
       await carritosApi.agregarItem({ productoId, cantidad: 1 });
@@ -179,11 +170,46 @@ export default function Catalogo() {
     }
   };
 
+  const abrirDetalle = (producto) => {
+    setDetalleLibro(producto);
+  };
+
+  const cerrarDetalle = () => {
+    setDetalleLibro(null);
+  };
+
+  const parsearDetalleLibro = (producto) => {
+    const descripcionRaw = (producto?.descripcion || "").trim();
+    const editorial = (producto?.editorial || "").trim();
+    const generoResuelto = resolverGenero(producto);
+
+    const autorMatch = descripcionRaw.match(/(?:autor|autora)\s*:\s*([^|,.]+)/i);
+    const isbnMatch = descripcionRaw.match(/isbn(?:-13|-10)?\s*:\s*([0-9xX\-]+)/i);
+
+    const limpiar = (texto) =>
+      (texto || "")
+        .replace(/(?:editorial)\s*:\s*[^.]+\.?/gi, "")
+        .replace(/(?:genero|género|categoria|categoría)\s*:\s*[^.]+\.?/gi, "")
+        .replace(/(?:autor|autora)\s*:\s*[^.]+\.?/gi, "")
+        .replace(/isbn(?:-13|-10)?\s*:\s*[0-9xX\-]+\.?/gi, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
+    const sinopsis = limpiar(descripcionRaw);
+
+    return {
+      autor: (producto?.autor || autorMatch?.[1] || "").trim() || "No informado",
+      genero: generoResuelto || "No informado",
+      isbn: (producto?.isbn || isbnMatch?.[1] || "").trim() || "No informado",
+      editorial: editorial || "No informada",
+      sinopsis: sinopsis || "Sinopsis no disponible.",
+    };
+  };
+
   return (
     <main className="catalogPage">
       <header className="catalogHero">
         <div className="catalogHero__content">
-          <p className="catalogHero__tag">LIBRERIA COMPUMAX</p>
           <h1 className="catalogHero__title">Compra online y retira en sucursal</h1>
           <p className="catalogHero__subtitle">
             Elegi tus libros, pagalos desde la web y hace seguimiento hasta que el retiro presencial este listo.
@@ -206,21 +232,6 @@ export default function Catalogo() {
 
         <div className="catalogHero__media" aria-hidden="true">
           <div className="catalogHero__panel">
-            <article className="catalogHero__stat">
-              <span className="catalogHero__statLabel">Libros disponibles</span>
-              <strong className="catalogHero__statValue">{items.length}</strong>
-            </article>
-
-            <article className="catalogHero__stat">
-              <span className="catalogHero__statLabel">Promociones activas</span>
-              <strong className="catalogHero__statValue">{totalPromos}</strong>
-            </article>
-
-            <article className="catalogHero__stat">
-              <span className="catalogHero__statLabel">Modalidad</span>
-              <strong className="catalogHero__statValue">Retiro presencial</strong>
-            </article>
-
             <p className="catalogHero__hint">
               Cuando la compra se confirma, podes ver el seguimiento en la seccion "Mis compras".
             </p>
@@ -231,14 +242,12 @@ export default function Catalogo() {
       <section className="catalogBar">
         <div className="catalogBar__left">
           <h2 className="catalogBar__heading">Catalogo</h2>
-          <span className="catalogBar__count">{filtrados.length} productos</span>
-          <span className="catalogBar__count">{generosDisponibles.length} generos</span>
         </div>
 
         <div className="catalogBar__right">
           <input
             className="catalogBar__search"
-            placeholder="Buscar por nombre o descripcion..."
+            placeholder="Buscar por nombre..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -262,9 +271,6 @@ export default function Catalogo() {
             <option value="precio-desc">Precio: mayor a menor</option>
           </select>
 
-          <button type="button" className="catalogBar__refresh" onClick={recargarCatalogo}>
-            Actualizar
-          </button>
         </div>
       </section>
 
@@ -274,10 +280,96 @@ export default function Catalogo() {
       {!loading && !error ? (
         <section className="catalogGrid">
           {filtrados.map((p) => (
-            <ProductCard key={p.id} producto={p} onAgregar={agregar} />
+            <ProductCard key={p.id} producto={p} onAgregar={agregar} onVerDetalle={abrirDetalle} />
           ))}
         </section>
       ) : null}
+
+      {detalleLibro ? (
+        <DetalleLibroModal
+          producto={detalleLibro}
+          onClose={cerrarDetalle}
+          onAgregar={agregar}
+          detalle={parsearDetalleLibro(detalleLibro)}
+        />
+      ) : null}
     </main>
+  );
+}
+
+function DetalleLibroModal({ producto, onClose, onAgregar, detalle }) {
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
+  const apiBase = (import.meta.env.VITE_API_BASE_URL || "https://localhost:7248").replace(/\/$/, "");
+  const imagen = (producto?.imagenUrl || "").trim();
+  const imageSrc = !imagen
+    ? ""
+    : (imagen.startsWith("http://") || imagen.startsWith("https://") || imagen.startsWith("data:"))
+      ? imagen
+      : `${apiBase}${imagen.startsWith("/") ? "" : "/"}${imagen}`;
+
+  const mostrarPromo =
+    !!producto?.tienePromocionActiva &&
+    producto?.precioFinal != null &&
+    Number(producto.precioFinal) < Number(producto.precio);
+
+  return (
+    <div className="catalogModal__overlay" role="dialog" aria-modal="true">
+      <div className="catalogModal">
+        <button className="catalogModal__close" type="button" onClick={onClose} aria-label="Cerrar detalle">
+          ×
+        </button>
+
+        <div className="catalogModal__grid">
+          <div className="catalogModal__imageWrap">
+            {imageSrc ? <img className="catalogModal__image" src={imageSrc} alt={producto?.nombre} /> : <div className="catalogModal__fallback">Sin imagen</div>}
+          </div>
+
+          <div className="catalogModal__body">
+            <h3 className="catalogModal__title">{producto?.nombre}</h3>
+
+            <div className="catalogModal__meta">
+              <p><strong>Autor:</strong> {detalle.autor}</p>
+              <p><strong>Genero:</strong> {detalle.genero}</p>
+              <p><strong>Editorial:</strong> {detalle.editorial}</p>
+              <p><strong>ISBN:</strong> {detalle.isbn}</p>
+            </div>
+
+            <div className="catalogModal__synopsis">
+              <strong>Sinopsis</strong>
+              <p>{detalle.sinopsis}</p>
+            </div>
+
+            <div className="catalogModal__footer">
+              <div className="catalogModal__price">
+                {mostrarPromo ? (
+                  <>
+                    <span className="catalogModal__priceOld">${Number(producto?.precio).toFixed(2)}</span>
+                    <span>${Number(producto?.precioFinal).toFixed(2)} ARS</span>
+                  </>
+                ) : (
+                  <span>${Number(producto?.precio).toFixed(2)} ARS</span>
+                )}
+              </div>
+
+              <button
+                className="catalogModal__addBtn"
+                type="button"
+                disabled={(producto?.stock ?? 0) <= 0}
+                onClick={() => onAgregar?.(producto?.id)}
+              >
+                {(producto?.stock ?? 0) <= 0 ? "Sin stock" : "Agregar al carrito"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

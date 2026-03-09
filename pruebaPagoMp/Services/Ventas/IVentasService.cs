@@ -19,4 +19,11 @@ public interface IVentasService
         EstadoVenta? estado);
 
     Task<int> RegistrarDevolucionPresencialAsync(int ventaId, DevolucionPresencialDto dto);
+    Task<int> CrearReservaPresencialAsync(int adminUsuarioId, CrearReservaPresencialDto dto);
+    Task<int> CompletarPagoReservaAsync(int reservaId, CompletarReservaPagoDto dto);
+    Task CancelarReservaAsync(int reservaId, string? motivo);
+    Task<int> VencerReservasAsync(DateTime? fechaCorte = null);
+    Task<List<ReservaListItemDto>> ObtenerReservasAsync(EstadoReserva? estado, DateTime? desde, DateTime? hasta, string? dni);
+    Task<List<ReservaLibroResumenDto>> ObtenerResumenLibrosSeniaAsync(bool incluirCerradas = false);
+    Task<ReservaDetalleDto?> ObtenerReservaPorIdAsync(int reservaId);
 }
